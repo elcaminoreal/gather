@@ -23,7 +23,7 @@ class Collector(object):
                 effective_name = inner_name
             else:
                 effective_name = name
-            scanner.registry[effective_name] = ob 
+            scanner.registry[effective_name] = ob
         def ret(func):
             venusian.attach(func, callback)
             return func
