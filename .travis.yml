@@ -1,0 +1,21 @@
+language: python
+matrix:
+  include:
+  - python: "2.7"
+    env: TOX_ENV=py27-unit
+  - python: "2.7"
+    env: TOX_ENV=py27-func
+  - python: "pypy"
+    env: TOX_ENV=pypy-unit
+  - python: "pypy"
+    env: TOX_ENV=pypy-func
+  - python: "3.5"
+    env: TOX_ENV=py35-unit
+  - python: "3.5"
+    env: TOX_ENV=py35-func
+  - python: "2.7"
+    env: TOX_ENV=py27-lint
+install:
+  - pip install tox
+script:
+  - tox -e $TOX_ENV
