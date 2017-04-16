@@ -33,7 +33,7 @@ class Collector(object):
         registry = {}
         def ignore_import_error(module):
             if not issubclass(sys.exc_info()[0], ImportError):
-                raise
+                raise # pragma: no cover
         scanner = venusian.Scanner(registry=registry, tag=self)
         for module in _get_modules():
             scanner.scan(module, onerror=ignore_import_error)
