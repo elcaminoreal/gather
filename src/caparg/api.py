@@ -15,7 +15,7 @@ def _get_modules():
 class Collector(object):
 
     def register(self, name=None):
-        def callback(scanner, inner_name, ob):
+        def callback(scanner, inner_name, objct):
             tag = getattr(scanner, 'tag', None)
             if tag is not self:
                 return
@@ -23,7 +23,7 @@ class Collector(object):
                 effective_name = inner_name
             else:
                 effective_name = name
-            scanner.registry[effective_name] = ob
+            scanner.registry[effective_name] = objct
         def ret(func):
             venusian.attach(func, callback)
             return func
@@ -31,7 +31,7 @@ class Collector(object):
 
     def collect(self):
         registry = {}
-        def ignore_import_error(module):
+        def ignore_import_error(_unused):
             if not issubclass(sys.exc_info()[0], ImportError):
                 raise # pragma: no cover
         scanner = venusian.Scanner(registry=registry, tag=self)
