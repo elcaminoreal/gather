@@ -5,8 +5,6 @@ import sys
 
 import pkg_resources
 
-import attr
-
 import venusian
 
 def _get_modules():
