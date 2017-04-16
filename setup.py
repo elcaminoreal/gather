@@ -11,7 +11,7 @@ setuptools.setup(
     author_email="zadka.moshe@gmail.com",
     packages=setuptools.find_packages(where='src'),
     package_dir={"": "src"},
-    install_requires=['incremental', 'venusian'],
+    install_requires=['incremental', 'venusian', 'six'],
     entry_points={
         'caparg': [
              "caparg=caparg:caparg",

@@ -1,5 +1,7 @@
 import unittest
 
+import six
+
 import caparg
 
 NICE_COMMANDS = caparg.Collector()
@@ -23,7 +25,7 @@ def main3(args):
 def main4(args):
     return 'main4', args
 
-class CapargTest(unittest.TestCase):
+class CollectorTest(unittest.TestCase):
 
     def test_collecting(self):
         collected = NICE_COMMANDS.collect()
@@ -37,3 +39,17 @@ class CapargTest(unittest.TestCase):
         self.assertIs(nice['foo'], main2)
         self.assertIs(nice['bar'], main3)
         self.assertIs(evil['foo'], main3)
+
+class RunTest(unittest.TestCase):
+
+    def test_simple(self):
+        things = []
+        commands = dict(simple=things.append)
+        output = six.StringIO()
+        caparg.run(
+            argv=['simple', 'world'],
+            commands=commands,
+            version='0.1.2',
+            output=output,
+        )
+        self.assertEquals(things.pop(), ['simple', 'world'])
