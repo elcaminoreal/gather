@@ -68,3 +68,31 @@ class RunTest(unittest.TestCase):
         self.assertEquals(lines.pop(0), 'Available subcommands:')
         self.assertEquals(lines.pop(0).strip(), 'simple')
         self.assertIn('--help', lines.pop(0))
+
+    def test_empty(self):
+        things = []
+        commands = dict(simple=things.append)
+        output = six.StringIO()
+        caparg.run(
+            argv=[],
+            commands=commands,
+            version='0.1.2',
+            output=output,
+        )
+        lines = output.getvalue().splitlines()
+        self.assertEquals(lines.pop(0), 'Available subcommands:')
+        self.assertEquals(lines.pop(0).strip(), 'simple')
+        self.assertIn('--help', lines.pop(0))
+
+    def test_version(self):
+        things = []
+        commands = dict(simple=things.append)
+        output = six.StringIO()
+        caparg.run(
+            argv=['version'],
+            commands=commands,
+            version='0.1.2',
+            output=output,
+        )
+        lines = output.getvalue().splitlines()
+        self.assertEquals(lines.pop(0), 'Version 0.1.2')
