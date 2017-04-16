@@ -1,3 +1,28 @@
+"""CapArg -- Captain Arguments, Ready for Sub-Command!
+
+CapArg (Captain Arguments) allows a way to register sub-commands
+for a command.
+It features the ability to register the sub-commands from any module,
+in any package, in any distribution.
+A given module can register sub-commands for multiple commands.
+
+In order to have anything registered from a package,
+it needs to declare that it supports :code:`caparg` in its `setup.py`:
+
+.. code::
+
+    entry_points={
+        'caparg': [
+             "dummy=ROOT_PACKAGE:dummy",
+        ]
+
+The :code:`ROOT_PACKAGE` should point to the Python name of the package:
+i.e., what users are expected to :code:`import` at the top-level.
+
+Note that while having special facilities to run functions as subcommands,
+CapArg can be used to collect anything.
+This allows it to serve as a generic plugin module.
+"""
 from __future__ import print_function
 
 import importlib
@@ -14,7 +39,27 @@ def _get_modules():
 
 class Collector(object):
 
+    """A plugin collector.
+
+    A collector allows to *register* functions or classes by modules,
+    and *collect*-ing them when they need to be used.
+    """
+
     def register(self, name=None):
+        """Register 
+
+        This is meant to be used as a decoator:
+
+        .. code::
+
+            @COLLECTOR.register()
+            def specific_subcommand(args):
+                pass
+
+            @COLLECTOR.register(name='another_specific_name')
+            def main(args):
+                pass
+        """
         def callback(scanner, inner_name, objct):
             tag = getattr(scanner, 'tag', None)
             if tag is not self:
@@ -30,6 +75,10 @@ class Collector(object):
         return ret
 
     def collect(self):
+        """Collect all registered.
+
+        Returns a dictionary mapping names to registered elements.
+        """
         registry = {}
         def ignore_import_error(_unused):
             if not issubclass(sys.exc_info()[0], ImportError):
@@ -40,6 +89,15 @@ class Collector(object):
         return registry
 
 def run(argv, commands, version, output):
+    """Run the correct subcommand.
+
+    :param argv: Arguments to be processed
+    :type argv: List of strings
+    :param commands: Commands (usually collected by a :code:`Collector`)
+    :type commands: Mapping of strings to functions that accept arguments
+    :param str version: Version string to display
+    :param file output: Where to write output to
+    """
     if len(argv) < 1:
         argv = argv + ['help']
     if argv[0] in ('version', '--version'):
@@ -53,4 +111,4 @@ def run(argv, commands, version, output):
         return
     commands[argv[0]](argv)
 
-__all__ = ['Collector']
+__all__ = ['Collector', 'run']
