@@ -46,7 +46,7 @@ class Collector(object):
     """
 
     def register(self, name=None):
-        """Register 
+        """Register
 
         This is meant to be used as a decoator:
 
