@@ -15,7 +15,7 @@ def goodbye(args):
     print("Goodbye", args)
 
 @COMMANDS.register()
-def breakfast(args):
+def breakfast(_args):
     foods = [klass() for klass in BREAKFAST.collect().values()]
     for food in foods:
         food.prepare()

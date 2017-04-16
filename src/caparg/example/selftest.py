@@ -7,7 +7,7 @@ import sys
 from caparg.example import main as cemain
 
 @cemain.COMMANDS.register()
-def selftest(args):
+def selftest(_args):
     command_prefix = [sys.executable, '-m', 'caparg.example']
     hello = command_prefix + ['hello', 'world']
     res = subprocess.check_output(hello).decode('utf-8')
