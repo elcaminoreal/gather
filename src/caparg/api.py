@@ -46,10 +46,10 @@ def run(argv, commands, version, output):
         print("Version {}".format(version), file=output)
         return
     if argv[0] in ('help', '--help') or argv[0] not in commands:
-        print("Available subcommands:")
+        print("Available subcommands:", file=output)
         for command in commands.keys():
-            print("\t{}".format(command))
-        print("Run subcommand with '--help' for more information")
+            print("\t{}".format(command), file=output)
+        print("Run subcommand with '--help' for more information", file=output)
         return
     commands[argv[0]](argv)
 

@@ -53,3 +53,18 @@ class RunTest(unittest.TestCase):
             output=output,
         )
         self.assertEquals(things.pop(), ['simple', 'world'])
+
+    def test_invalid(self):
+        things = []
+        commands = dict(simple=things.append)
+        output = six.StringIO()
+        caparg.run(
+            argv=['lala'],
+            commands=commands,
+            version='0.1.2',
+            output=output,
+        )
+        lines = output.getvalue().splitlines()
+        self.assertEquals(lines.pop(0), 'Available subcommands:')
+        self.assertEquals(lines.pop(0).strip(), 'simple')
+        self.assertIn('--help', lines.pop(0))
