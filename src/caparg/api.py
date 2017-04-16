@@ -1,4 +1,7 @@
+from __future__ import print_function
+
 import importlib
+import sys
 
 import pkg_resources
 
@@ -30,9 +33,26 @@ class Collector(object):
 
     def collect(self):
         registry = {}
+        def ignore_import_error(module):
+            if not issubclass(sys.exc_info()[0], ImportError):
+                raise
         scanner = venusian.Scanner(registry=registry, tag=self)
         for module in _get_modules():
-            scanner.scan(module)
+            scanner.scan(module, onerror=ignore_import_error)
         return registry
+
+def run(argv, commands, version, output):
+    if len(argv) < 1:
+        argv = argv + ['help']
+    if argv[0] in ('version', '--version'):
+        print("Version {}".format(version), file=output)
+        return
+    if argv[0] in ('help', '--help') or argv[0] not in commands:
+        print("Available subcommands:")
+        for command in commands.keys():
+            print("\t{}".format(command))
+        print("Run subcommand with '--help' for more information")
+        return
+    commands[argv[0]](argv)
 
 __all__ = ['Collector']
