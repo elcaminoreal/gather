@@ -1,10 +1,13 @@
 import setuptools
 
+with open('README.rst') as fp:
+    long_description = fp.read()
+
 setuptools.setup(
     name='gather',
     license='MIT',
     description="Gather: A gatherer.",
-    long_description="Such gather. Much gathering.",
+    long_description=long_description,
     use_incremental=True,
     setup_requires=['incremental'],
     author="Moshe Zadka",
