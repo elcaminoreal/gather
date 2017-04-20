@@ -2,11 +2,11 @@ import unittest
 
 import six
 
-import caparg
+import gather
 
-NICE_COMMANDS = caparg.Collector()
+NICE_COMMANDS = gather.Collector()
 
-EVIL_COMMANDS = caparg.Collector()
+EVIL_COMMANDS = gather.Collector()
 
 @NICE_COMMANDS.register()
 def main1(args):
@@ -46,7 +46,7 @@ class RunTest(unittest.TestCase):
         things = []
         commands = dict(simple=things.append)
         output = six.StringIO()
-        caparg.run(
+        gather.run(
             argv=['simple', 'world'],
             commands=commands,
             version='0.1.2',
@@ -58,7 +58,7 @@ class RunTest(unittest.TestCase):
         things = []
         commands = dict(simple=things.append)
         output = six.StringIO()
-        caparg.run(
+        gather.run(
             argv=['lala'],
             commands=commands,
             version='0.1.2',
@@ -73,7 +73,7 @@ class RunTest(unittest.TestCase):
         things = []
         commands = dict(simple=things.append)
         output = six.StringIO()
-        caparg.run(
+        gather.run(
             argv=[],
             commands=commands,
             version='0.1.2',
@@ -88,7 +88,7 @@ class RunTest(unittest.TestCase):
         things = []
         commands = dict(simple=things.append)
         output = six.StringIO()
-        caparg.run(
+        gather.run(
             argv=['version'],
             commands=commands,
             version='0.1.2',

@@ -7,5 +7,5 @@ CapArg
 .. toctree::
    :maxdepth: 2
 
-.. automodule:: caparg.api
+.. automodule:: gather.api
    :members:

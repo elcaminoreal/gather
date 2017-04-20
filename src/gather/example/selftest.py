@@ -4,11 +4,11 @@ import ast
 import subprocess
 import sys
 
-from caparg.example import main as cemain
+from gather.example import main as cemain
 
 @cemain.COMMANDS.register()
 def selftest(_args):
-    command_prefix = [sys.executable, '-m', 'caparg.example']
+    command_prefix = [sys.executable, '-m', 'gather.example']
     hello = command_prefix + ['hello', 'world']
     res = subprocess.check_output(hello).decode('utf-8')
     greeting, contents = res.split(None, 1)
