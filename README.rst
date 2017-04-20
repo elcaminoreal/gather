@@ -1,18 +1,18 @@
 .. Copyright (c) Moshe Zadka
    See LICENSE for details.
 
-CapArg
+Gather
 ------
 
-Captain Arguments -- make it easy to run subcommands.
+Gather -- gather all plugins into a dictionary
 
-.. image:: https://travis-ci.org/moshez/caparg.svg?branch=master
-    :target: https://travis-ci.org/moshez/caparg
+.. image:: https://travis-ci.org/moshez/gather.svg?branch=master
+    :target: https://travis-ci.org/moshez/gather
 
-.. image:: https://readthedocs.org/projects/caparg/badge/?version=latest
+.. image:: https://readthedocs.org/projects/gather/badge/?version=latest
     :alt: Documentation Status
     :scale: 100%
-    :target: https://readthedocs.org/projects/caparg/
+    :target: https://readthedocs.org/projects/gather/
 
 Hacking
 =======
