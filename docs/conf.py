@@ -6,14 +6,14 @@ import sys
 up = os.path.dirname(os.path.dirname(__file__))
 sys.path.append(up)
 
-import caparg
+import gather
 
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
 ]
 master_doc = 'index'
-project = 'CapArg'
+project = 'Gather'
 copyright = '2017, Moshe Zadka'
 author = 'Moshe Zadka'
 version = '17.4'

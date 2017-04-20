@@ -1,10 +1,10 @@
 from __future__ import print_function
 
-import caparg
+import gather
 
-COMMANDS = caparg.Collector()
+COMMANDS = gather.Collector()
 
-BREAKFAST = caparg.Collector()
+BREAKFAST = gather.Collector()
 
 @COMMANDS.register()
 def hello(args):

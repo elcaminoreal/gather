@@ -1,10 +1,10 @@
 import setuptools
 
 setuptools.setup(
-    name='caparg',
+    name='gather',
     license='MIT',
-    description="Captain Arguments.",
-    long_description="Such Captain. So Argument.",
+    description="Gather: A gatherer.",
+    long_description="Such gather. Much gathering.",
     use_incremental=True,
     setup_requires=['incremental'],
     author="Moshe Zadka",
@@ -13,8 +13,8 @@ setuptools.setup(
     package_dir={"": "src"},
     install_requires=['incremental', 'venusian', 'six'],
     entry_points={
-        'caparg': [
-             "caparg=caparg:caparg",
+        'gather': [
+             "gather=gather:gather",
         ]
     }
 )

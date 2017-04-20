@@ -1,2 +1,2 @@
-from caparg.api import Collector, run
-from caparg._version import __version__
+from gather.api import Collector, run
+from gather._version import __version__

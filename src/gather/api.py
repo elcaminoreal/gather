@@ -7,12 +7,12 @@ in any package, in any distribution.
 A given module can register sub-commands for multiple commands.
 
 In order to have anything registered from a package,
-it needs to declare that it supports :code:`caparg` in its `setup.py`:
+it needs to declare that it supports :code:`gather` in its `setup.py`:
 
 .. code::
 
     entry_points={
-        'caparg': [
+        'gather': [
              "dummy=ROOT_PACKAGE:dummy",
         ]
 
@@ -33,7 +33,7 @@ import pkg_resources
 import venusian
 
 def _get_modules():
-    for entry_point in pkg_resources.iter_entry_points(group='caparg'):
+    for entry_point in pkg_resources.iter_entry_points(group='gather'):
         module = importlib.import_module(entry_point.module_name)
         yield module
 

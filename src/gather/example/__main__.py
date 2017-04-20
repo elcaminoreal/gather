@@ -1,15 +1,15 @@
 import sys
 
-import caparg
+import gather
 
-from caparg.example import main
+from gather.example import main
 
 if __name__ != '__main__':
     raise ImportError("module cannot be imported")
 
-caparg.run(
+gather.run(
     argv=sys.argv[1:],
     commands=main.COMMANDS.collect(),
-    version=caparg.__version__,
+    version=gather.__version__,
     output=sys.stdout,
 )
