@@ -1,7 +1,7 @@
 .. Copyright (c) Moshe Zadka
    See LICENSE for details.
 
-CapArg
+Gather
 ======
 
 .. toctree::

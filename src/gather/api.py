@@ -1,10 +1,9 @@
-"""CapArg -- Captain Arguments, Ready for Sub-Command!
+"""Gather -- Collect all your plugins
 
-CapArg (Captain Arguments) allows a way to register sub-commands
-for a command.
-It features the ability to register the sub-commands from any module,
+Gather allows a way to register plugins.
+It features the ability to register the plugins from any module,
 in any package, in any distribution.
-A given module can register sub-commands for multiple commands.
+A given module can register plugins of multiple types.
 
 In order to have anything registered from a package,
 it needs to declare that it supports :code:`gather` in its `setup.py`:
@@ -20,8 +19,7 @@ The :code:`ROOT_PACKAGE` should point to the Python name of the package:
 i.e., what users are expected to :code:`import` at the top-level.
 
 Note that while having special facilities to run functions as subcommands,
-CapArg can be used to collect anything.
-This allows it to serve as a generic plugin module.
+Gather can be used to collect anything.
 """
 from __future__ import print_function
 
