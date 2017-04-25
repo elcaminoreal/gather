@@ -4,6 +4,8 @@ import six
 
 import gather
 
+from gather import _helper
+
 NICE_COMMANDS = gather.Collector()
 
 EVIL_COMMANDS = gather.Collector()
@@ -25,6 +27,10 @@ def main3(args):
 def main4(args):
     return 'main4', args
 
+@_helper.weird_decorator
+def weird_function():
+    pass
+
 class CollectorTest(unittest.TestCase):
 
     def test_collecting(self):
@@ -39,6 +45,10 @@ class CollectorTest(unittest.TestCase):
         self.assertIs(nice['foo'], main2)
         self.assertIs(nice['bar'], main3)
         self.assertIs(evil['foo'], main3)
+
+    def test_cross_module_collection(self):
+        collected = _helper.WEIRD_COMMANDS.collect()
+        self.assertIn('weird_function', collected)
 
 class RunTest(unittest.TestCase):
 
