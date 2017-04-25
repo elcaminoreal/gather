@@ -28,6 +28,8 @@ import sys
 
 import pkg_resources
 
+import attr
+
 import venusian
 
 def _get_modules():
@@ -35,7 +37,11 @@ def _get_modules():
         module = importlib.import_module(entry_point.module_name)
         yield module
 
+@attr.s(frozen=True)
 class Collector(object):
+
+    name = attr.ib(default=None)
+    depth = attr.ib(default=1)
 
     """A plugin collector.
 
@@ -68,7 +74,7 @@ class Collector(object):
                 effective_name = name
             scanner.registry[effective_name] = objct
         def ret(func):
-            venusian.attach(func, callback)
+            venusian.attach(func, callback, depth=self.depth)
             return func
         return ret
 
