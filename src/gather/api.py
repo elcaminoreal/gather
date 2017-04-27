@@ -40,17 +40,22 @@ def _get_modules():
 @attr.s(frozen=True)
 class Collector(object):
 
-    name = attr.ib(default=None)
-    depth = attr.ib(default=1)
-
     """A plugin collector.
 
     A collector allows to *register* functions or classes by modules,
     and *collect*-ing them when they need to be used.
     """
 
+    name = attr.ib(default=None)
+    depth = attr.ib(default=1)
+
     def register(self, name=None, transform=lambda x:x):
         """Register
+
+        :param name: optional. Name to register as (default is name of object)
+        :param transform: optional. A one-argument function. Will be called,
+                          and the return value used in collection.
+                          Default is identity function
 
         This is meant to be used as a decoator:
 
@@ -116,6 +121,15 @@ def run(argv, commands, version, output):
     commands[argv[0]](argv)
 
 def pair_with(x):
+    """Return a function that will create a 2-tuple
+
+    :param x: second item in the tuple
+    :returns: function of one argument that returns a 2-tuple with the argument
+              as the first element
+
+    This function is useful mainly as the :code:`transform` parameter
+    of a :code:`register` call.
+    """
     def ret(y):
         return y, x
     return ret
