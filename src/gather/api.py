@@ -49,7 +49,7 @@ class Collector(object):
     name = attr.ib(default=None)
     depth = attr.ib(default=1)
 
-    def register(self, name=None, transform=lambda x:x):
+    def register(self, name=None, transform=lambda x: x):
         """Register
 
         :param name: optional. Name to register as (default is name of object)
@@ -120,18 +120,18 @@ def run(argv, commands, version, output):
         return
     commands[argv[0]](argv)
 
-def pair_with(x):
+def pair_with(second_element):
     """Return a function that will create a 2-tuple
 
-    :param x: second item in the tuple
+    :param second_element: second item in the tuple
     :returns: function of one argument that returns a 2-tuple with the argument
               as the first element
 
     This function is useful mainly as the :code:`transform` parameter
     of a :code:`register` call.
     """
-    def ret(y):
-        return y, x
+    def ret(first_element):
+        return first_element, second_element
     return ret
 
 __all__ = ['Collector', 'run', 'pair_with']
