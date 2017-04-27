@@ -49,7 +49,7 @@ class Collector(object):
     and *collect*-ing them when they need to be used.
     """
 
-    def register(self, name=None):
+    def register(self, name=None, transform=lambda x:x):
         """Register
 
         This is meant to be used as a decoator:
@@ -72,7 +72,7 @@ class Collector(object):
                 effective_name = inner_name
             else:
                 effective_name = name
-            scanner.registry[effective_name] = objct
+            scanner.registry[effective_name] = transform(objct)
         def ret(func):
             venusian.attach(func, callback, depth=self.depth)
             return func
@@ -115,4 +115,9 @@ def run(argv, commands, version, output):
         return
     commands[argv[0]](argv)
 
-__all__ = ['Collector', 'run']
+def pair_with(x):
+    def ret(y):
+        return y, x
+    return ret
+
+__all__ = ['Collector', 'run', 'pair_with']

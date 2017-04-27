@@ -31,6 +31,12 @@ def main4(args):
 def weird_function():
     pass
 
+TRANSFORM_COMMANDS = gather.Collector()
+
+@TRANSFORM_COMMANDS.register(transform=gather.pair_with(5))
+def foo():
+    pass
+
 class CollectorTest(unittest.TestCase):
 
     def test_collecting(self):
@@ -49,6 +55,13 @@ class CollectorTest(unittest.TestCase):
     def test_cross_module_collection(self):
         collected = _helper.WEIRD_COMMANDS.collect()
         self.assertIn('weird_function', collected)
+
+    def test_transform(self):
+        collected = TRANSFORM_COMMANDS.collect()
+        self.assertIn('foo', collected)
+        new_foo, five = collected.pop('foo')
+        self.assertIs(new_foo, foo)
+        self.assertEquals(five, 5)
 
 class RunTest(unittest.TestCase):
 
