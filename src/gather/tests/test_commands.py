@@ -37,6 +37,23 @@ TRANSFORM_COMMANDS = gather.Collector()
 def fooish():
     pass
 
+CONFLICTING_COMMANDS = gather.Collector()
+
+NON_CONFLICTING_COMMANDS = gather.Collector()
+
+@NON_CONFLICTING_COMMANDS.register(name='foo')
+@CONFLICTING_COMMANDS.register(name='foo')
+def foo1():
+     pass
+
+@CONFLICTING_COMMANDS.register(name='foo')
+def foo2():
+     pass
+
+@CONFLICTING_COMMANDS.register(name='foo')
+def foo3():
+     pass
+
 class CollectorTest(unittest.TestCase):
 
     def test_collecting(self):
@@ -62,6 +79,32 @@ class CollectorTest(unittest.TestCase):
         res = collected.pop('fooish')
         self.assertIs(res.original, fooish)
         self.assertEquals(res.extra, 5)
+
+    def test_one_of_strategy(self):
+        collected = CONFLICTING_COMMANDS.collect()
+        foo = collected.pop('foo')
+        self.assertEquals(collected, {})
+        self.assertIn(foo, (foo1, foo2, foo3))
+
+    def test_explicit_one_of_strategy(self):
+        collected = CONFLICTING_COMMANDS.collect(strategy=gather.Collector.one_of)
+        foo = collected.pop('foo')
+        self.assertEquals(collected, {})
+        self.assertIn(foo, (foo1, foo2, foo3))
+
+    def test_all_strategy(self):
+        collected = CONFLICTING_COMMANDS.collect(strategy=gather.Collector.all)
+        foo = collected.pop('foo')
+        self.assertEquals(collected, {})
+        self.assertEquals(foo, set([foo1, foo2, foo3]))
+
+    def test_conflicting_strategy(self):
+        with self.assertRaises(ValueError):
+            CONFLICTING_COMMANDS.collect(strategy=gather.Collector.conflict)
+        collected = NON_CONFLICTING_COMMANDS.collect(strategy=gather.Collector.conflict)
+        foo = collected.pop('foo')
+        self.assertEquals(collected, {})
+        self.assertEquals(foo, foo1)
 
 class RunTest(unittest.TestCase):
 

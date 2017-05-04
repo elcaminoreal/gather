@@ -37,6 +37,7 @@ def _get_modules():
         module = importlib.import_module(entry_point.module_name)
         yield module
 
+
 @attr.s(frozen=True)
 class Collector(object):
 
@@ -47,7 +48,25 @@ class Collector(object):
     """
 
     name = attr.ib(default=None)
+
     depth = attr.ib(default=1)
+
+    @staticmethod
+    def one_of(registry, effective_name, objct):
+        return objct
+
+    @staticmethod
+    def all(registry, effective_name, objct):
+        st = registry.get(effective_name, set())
+        st.add(objct)
+        return st
+
+    @staticmethod
+    def conflict(registry, effective_name, objct):
+        if effective_name in registry:
+            raise ValueError("Attempt to double register",
+                             registry, effective_name, objct)
+        return objct
 
     def register(self, name=None, transform=lambda x: x):
         """Register
@@ -77,13 +96,17 @@ class Collector(object):
                 effective_name = inner_name
             else:
                 effective_name = name
-            scanner.registry[effective_name] = transform(objct)
+            objct = transform(objct)
+            try:
+                scanner.registry[effective_name] = scanner.strategy(scanner.registry, effective_name, objct)
+            except ValueError as exc:
+                scanner.please_raise = exc
         def ret(func):
             venusian.attach(func, callback, depth=self.depth)
             return func
         return ret
 
-    def collect(self):
+    def collect(self, strategy=one_of.__func__):
         """Collect all registered.
 
         Returns a dictionary mapping names to registered elements.
@@ -92,9 +115,11 @@ class Collector(object):
         def ignore_import_error(_unused):
             if not issubclass(sys.exc_info()[0], ImportError):
                 raise # pragma: no cover
-        scanner = venusian.Scanner(registry=registry, tag=self)
+        scanner = venusian.Scanner(registry=registry, tag=self, strategy=strategy)
         for module in _get_modules():
             scanner.scan(module, onerror=ignore_import_error)
+        if hasattr(scanner, 'please_raise'):
+            raise scanner.please_raise
         return registry
 
 def run(argv, commands, version, output):
