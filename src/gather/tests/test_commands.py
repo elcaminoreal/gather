@@ -14,12 +14,12 @@ EVIL_COMMANDS = gather.Collector()
 def main1(args):
     return 'main1', args
 
-@NICE_COMMANDS.register(name='foo')
+@NICE_COMMANDS.register(name='weird_name')
 def main2(args):
     return 'main2', args
 
 @NICE_COMMANDS.register(name='bar')
-@EVIL_COMMANDS.register(name='foo')
+@EVIL_COMMANDS.register(name='weird_name')
 def main3(args):
     return 'main3', args
 
@@ -41,18 +41,18 @@ CONFLICTING_COMMANDS = gather.Collector()
 
 NON_CONFLICTING_COMMANDS = gather.Collector()
 
-@NON_CONFLICTING_COMMANDS.register(name='foo')
-@CONFLICTING_COMMANDS.register(name='foo')
-def foo1():
-     pass
+@NON_CONFLICTING_COMMANDS.register(name='weird_name')
+@CONFLICTING_COMMANDS.register(name='weird_name')
+def weird_name1():
+    pass
 
-@CONFLICTING_COMMANDS.register(name='foo')
-def foo2():
-     pass
+@CONFLICTING_COMMANDS.register(name='weird_name')
+def weird_name2():
+    pass
 
-@CONFLICTING_COMMANDS.register(name='foo')
-def foo3():
-     pass
+@CONFLICTING_COMMANDS.register(name='weird_name')
+def weird_name3():
+    pass
 
 class CollectorTest(unittest.TestCase):
 
@@ -65,9 +65,9 @@ class CollectorTest(unittest.TestCase):
     def test_non_collision(self):
         nice = NICE_COMMANDS.collect()
         evil = EVIL_COMMANDS.collect()
-        self.assertIs(nice['foo'], main2)
+        self.assertIs(nice['weird_name'], main2)
         self.assertIs(nice['bar'], main3)
-        self.assertIs(evil['foo'], main3)
+        self.assertIs(evil['weird_name'], main3)
 
     def test_cross_module_collection(self):
         collected = _helper.WEIRD_COMMANDS.collect()
@@ -82,29 +82,29 @@ class CollectorTest(unittest.TestCase):
 
     def test_one_of_strategy(self):
         collected = CONFLICTING_COMMANDS.collect()
-        foo = collected.pop('foo')
+        weird_name = collected.pop('weird_name')
         self.assertEquals(collected, {})
-        self.assertIn(foo, (foo1, foo2, foo3))
+        self.assertIn(weird_name, (weird_name1, weird_name2, weird_name3))
 
     def test_explicit_one_of_strategy(self):
         collected = CONFLICTING_COMMANDS.collect(strategy=gather.Collector.one_of)
-        foo = collected.pop('foo')
+        weird_name = collected.pop('weird_name')
         self.assertEquals(collected, {})
-        self.assertIn(foo, (foo1, foo2, foo3))
+        self.assertIn(weird_name, (weird_name1, weird_name2, weird_name3))
 
     def test_all_strategy(self):
         collected = CONFLICTING_COMMANDS.collect(strategy=gather.Collector.all)
-        foo = collected.pop('foo')
+        weird_name = collected.pop('weird_name')
         self.assertEquals(collected, {})
-        self.assertEquals(foo, set([foo1, foo2, foo3]))
+        self.assertEquals(weird_name, set([weird_name1, weird_name2, weird_name3]))
 
     def test_conflicting_strategy(self):
         with self.assertRaises(ValueError):
             CONFLICTING_COMMANDS.collect(strategy=gather.Collector.conflict)
         collected = NON_CONFLICTING_COMMANDS.collect(strategy=gather.Collector.conflict)
-        foo = collected.pop('foo')
+        weird_name = collected.pop('weird_name')
         self.assertEquals(collected, {})
-        self.assertEquals(foo, foo1)
+        self.assertEquals(weird_name, weird_name1)
 
 class RunTest(unittest.TestCase):
 

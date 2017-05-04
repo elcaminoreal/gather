@@ -52,14 +52,14 @@ class Collector(object):
     depth = attr.ib(default=1)
 
     @staticmethod
-    def one_of(registry, effective_name, objct):
+    def one_of(_registry, _effective_name, objct):
         return objct
 
     @staticmethod
     def all(registry, effective_name, objct):
-        st = registry.get(effective_name, set())
-        st.add(objct)
-        return st
+        myset = registry.get(effective_name, set())
+        myset.add(objct)
+        return myset
 
     @staticmethod
     def conflict(registry, effective_name, objct):
@@ -98,7 +98,9 @@ class Collector(object):
                 effective_name = name
             objct = transform(objct)
             try:
-                scanner.registry[effective_name] = scanner.strategy(scanner.registry, effective_name, objct)
+                scanner.registry[effective_name] = scanner.strategy(scanner.registry,
+                                                                    effective_name,
+                                                                    objct)
             except ValueError as exc:
                 scanner.please_raise = exc
         def ret(func):
@@ -119,7 +121,7 @@ class Collector(object):
         for module in _get_modules():
             scanner.scan(module, onerror=ignore_import_error)
         if hasattr(scanner, 'please_raise'):
-            raise scanner.please_raise
+            raise getattr(scanner, 'please_raise')
         return registry
 
 def run(argv, commands, version, output):
