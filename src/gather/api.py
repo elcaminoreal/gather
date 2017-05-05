@@ -120,18 +120,27 @@ def run(argv, commands, version, output):
         return
     commands[argv[0]](argv)
 
-def pair_with(second_element):
-    """Return a function that will create a 2-tuple
+@attr.s(frozen=True)
+class Wrapper(object):
 
-    :param second_element: second item in the tuple
-    :returns: function of one argument that returns a 2-tuple with the argument
-              as the first element
+    """Add extra data to an object"""
 
-    This function is useful mainly as the :code:`transform` parameter
-    of a :code:`register` call.
-    """
-    def ret(first_element):
-        return first_element, second_element
-    return ret
+    original = attr.ib()
 
-__all__ = ['Collector', 'run', 'pair_with']
+    extra = attr.ib()
+
+    @classmethod
+    def glue(cls, extra):
+        """Glue extra data to an object
+
+        :param extra: what to add
+        :returns: function of one argument that returns a :code:`Wrapped`
+
+        This method is useful mainly as the :code:`transform` parameter
+        of a :code:`register` call.
+        """
+        def ret(original):
+            return cls(original=original, extra=extra)
+        return ret
+
+__all__ = ['Collector', 'run', 'Wrapper']

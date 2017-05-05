@@ -33,7 +33,7 @@ def weird_function():
 
 TRANSFORM_COMMANDS = gather.Collector()
 
-@TRANSFORM_COMMANDS.register(transform=gather.pair_with(5))
+@TRANSFORM_COMMANDS.register(transform=gather.Wrapper.glue(5))
 def fooish():
     pass
 
@@ -59,9 +59,9 @@ class CollectorTest(unittest.TestCase):
     def test_transform(self):
         collected = TRANSFORM_COMMANDS.collect()
         self.assertIn('fooish', collected)
-        new_foo, five = collected.pop('fooish')
-        self.assertIs(new_foo, fooish)
-        self.assertEquals(five, 5)
+        res = collected.pop('fooish')
+        self.assertIs(res.original, fooish)
+        self.assertEquals(res.extra, 5)
 
 class RunTest(unittest.TestCase):
 
