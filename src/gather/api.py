@@ -134,7 +134,7 @@ class Collector(object):
         def ignore_import_error(_unused):
             if not issubclass(sys.exc_info()[0], ImportError):
                 raise # pragma: no cover
-        params  = _ScannerParameters(strategy=strategy)
+        params = _ScannerParameters(strategy=strategy)
         scanner = venusian.Scanner(update=params.update, tag=self)
         for module in _get_modules():
             scanner.scan(module, onerror=ignore_import_error)
