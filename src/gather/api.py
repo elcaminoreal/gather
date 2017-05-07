@@ -38,8 +38,7 @@ def _get_modules():
         yield module
 
 class GatherConflictError(ValueError):
-    pass
-
+    """Two or more plugins registered for the same name."""
 
 @attr.s(frozen=True)
 class Collector(object):
@@ -144,11 +143,17 @@ class Collector(object):
 @attr.s
 class _ScannerParameters(object):
 
+    """Parameters for scanner
+
+    Update the registry respecting the strategy,
+    and raise errors at the end.
+    """
     _please_raise = attr.ib(init=False, default=None)
     _strategy = attr.ib()
     registry = attr.ib(init=False, default=attr.Factory(dict))
 
     def update(self, name, objct):
+        """Update registry with name->objct"""
         try:
             res = self._strategy(self.registry, name, objct)
             self.registry[name] = res
@@ -156,6 +161,7 @@ class _ScannerParameters(object):
             self._please_raise = exc
 
     def raise_if_needed(self):
+        """Raise exception if any of the updates failed."""
         if self._please_raise is not None:
             raise self._please_raise
 
