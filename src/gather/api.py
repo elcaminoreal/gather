@@ -40,17 +40,22 @@ def _get_modules():
 @attr.s(frozen=True)
 class Collector(object):
 
-    name = attr.ib(default=None)
-    depth = attr.ib(default=1)
-
     """A plugin collector.
 
     A collector allows to *register* functions or classes by modules,
     and *collect*-ing them when they need to be used.
     """
 
-    def register(self, name=None):
+    name = attr.ib(default=None)
+    depth = attr.ib(default=1)
+
+    def register(self, name=None, transform=lambda x: x):
         """Register
+
+        :param name: optional. Name to register as (default is name of object)
+        :param transform: optional. A one-argument function. Will be called,
+                          and the return value used in collection.
+                          Default is identity function
 
         This is meant to be used as a decoator:
 
@@ -72,7 +77,7 @@ class Collector(object):
                 effective_name = inner_name
             else:
                 effective_name = name
-            scanner.registry[effective_name] = objct
+            scanner.registry[effective_name] = transform(objct)
         def ret(func):
             venusian.attach(func, callback, depth=self.depth)
             return func
@@ -115,4 +120,27 @@ def run(argv, commands, version, output):
         return
     commands[argv[0]](argv)
 
-__all__ = ['Collector', 'run']
+@attr.s(frozen=True)
+class Wrapper(object):
+
+    """Add extra data to an object"""
+
+    original = attr.ib()
+
+    extra = attr.ib()
+
+    @classmethod
+    def glue(cls, extra):
+        """Glue extra data to an object
+
+        :param extra: what to add
+        :returns: function of one argument that returns a :code:`Wrapped`
+
+        This method is useful mainly as the :code:`transform` parameter
+        of a :code:`register` call.
+        """
+        def ret(original):
+            return cls(original=original, extra=extra)
+        return ret
+
+__all__ = ['Collector', 'run', 'Wrapper']
