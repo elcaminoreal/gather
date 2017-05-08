@@ -37,6 +37,9 @@ def _get_modules():
         module = importlib.import_module(entry_point.module_name)
         yield module
 
+class GatherConflictError(ValueError):
+    """Two or more plugins registered for the same name."""
+
 @attr.s(frozen=True)
 class Collector(object):
 
@@ -47,7 +50,45 @@ class Collector(object):
     """
 
     name = attr.ib(default=None)
+
     depth = attr.ib(default=1)
+
+    @staticmethod
+    def one_of(_registry, _effective_name, objct):
+        """Assign one of the possible options.
+
+        When given as a collection strategy to :code:`collect`,
+        will assign one of the options to a name in case more
+        than one item is registered to the same name.
+
+        This is the default.
+        """
+        return objct
+
+    @staticmethod
+    def all(registry, effective_name, objct):
+        """Assign all of the possible options.
+
+        Collect all registered items into a set,
+        and assign that set to a name. Note that
+        even if only one item is assigned to a name,
+        that name will be assigned to a set of length 1.
+        """
+        myset = registry.get(effective_name, set())
+        myset.add(objct)
+        return myset
+
+    @staticmethod
+    def conflict(registry, effective_name, objct):
+        """Raise an error on conflicting registration.
+
+        If more than one item is registered to the
+        same name, raise a :code:`GatherConflictError`.
+        """
+        if effective_name in registry:
+            raise GatherConflictError("Attempt to double register",
+                                      registry, effective_name, objct)
+        return objct
 
     def register(self, name=None, transform=lambda x: x):
         """Register
@@ -77,25 +118,52 @@ class Collector(object):
                 effective_name = inner_name
             else:
                 effective_name = name
-            scanner.registry[effective_name] = transform(objct)
+            objct = transform(objct)
+            scanner.update(effective_name, objct)
         def ret(func):
             venusian.attach(func, callback, depth=self.depth)
             return func
         return ret
 
-    def collect(self):
+    def collect(self, strategy=one_of.__func__):
         """Collect all registered.
 
         Returns a dictionary mapping names to registered elements.
         """
-        registry = {}
         def ignore_import_error(_unused):
             if not issubclass(sys.exc_info()[0], ImportError):
                 raise # pragma: no cover
-        scanner = venusian.Scanner(registry=registry, tag=self)
+        params = _ScannerParameters(strategy=strategy)
+        scanner = venusian.Scanner(update=params.update, tag=self)
         for module in _get_modules():
             scanner.scan(module, onerror=ignore_import_error)
-        return registry
+        params.raise_if_needed()
+        return params.registry
+
+@attr.s
+class _ScannerParameters(object):
+
+    """Parameters for scanner
+
+    Update the registry respecting the strategy,
+    and raise errors at the end.
+    """
+    _please_raise = attr.ib(init=False, default=None)
+    _strategy = attr.ib()
+    registry = attr.ib(init=False, default=attr.Factory(dict))
+
+    def update(self, name, objct):
+        """Update registry with name->objct"""
+        try:
+            res = self._strategy(self.registry, name, objct)
+            self.registry[name] = res
+        except GatherConflictError as exc:
+            self._please_raise = exc
+
+    def raise_if_needed(self):
+        """Raise exception if any of the updates failed."""
+        if self._please_raise is not None:
+            raise self._please_raise
 
 def run(argv, commands, version, output):
     """Run the correct subcommand.
