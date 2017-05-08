@@ -1,3 +1,5 @@
+"""Entry point for self-test/example subcommand runner"""
+
 import sys
 
 import gather
