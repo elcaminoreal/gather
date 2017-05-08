@@ -111,6 +111,7 @@ class Collector(object):
                 pass
         """
         def callback(scanner, inner_name, objct):
+            """Venusian callback to be called from scan"""
             tag = getattr(scanner, 'tag', None)
             if tag is not self:
                 return
@@ -121,6 +122,7 @@ class Collector(object):
             objct = transform(objct)
             scanner.update(effective_name, objct)
         def ret(func):
+            """Attach callback to be called when object is scanned"""
             venusian.attach(func, callback, depth=self.depth)
             return func
         return ret
@@ -131,6 +133,11 @@ class Collector(object):
         Returns a dictionary mapping names to registered elements.
         """
         def ignore_import_error(_unused):
+            """Ignore ImportError while collecting.
+
+            Some modules raise import errors for various reasons,
+            and should be just treated as missing.
+            """
             if not issubclass(sys.exc_info()[0], ImportError):
                 raise # pragma: no cover
         params = _ScannerParameters(strategy=strategy)
@@ -208,6 +215,7 @@ class Wrapper(object):
         of a :code:`register` call.
         """
         def ret(original):
+            """Return a Wrapper with the original and extra"""
             return cls(original=original, extra=extra)
         return ret
 
