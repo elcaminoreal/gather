@@ -219,7 +219,7 @@ class Wrapper(object):
         of a :code:`register` call.
         """
         def ret(original):
-            """Return a Wrapper with the original and extra"""
+            """Return a :code:`Wrapper` with the original and extra"""
             return cls(original=original, extra=extra)
         return ret
 
