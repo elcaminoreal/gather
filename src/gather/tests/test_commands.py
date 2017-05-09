@@ -6,7 +6,7 @@ import six
 
 import gather
 
-from gather import _helper
+from gather.tests import _helper
 
 NICE_COMMANDS = gather.Collector()
 
