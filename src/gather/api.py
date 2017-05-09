@@ -111,7 +111,11 @@ class Collector(object):
                 pass
         """
         def callback(scanner, inner_name, objct):
-            """Venusian callback to be called from scan"""
+            ("""Venusian_ callback to be called from scan
+
+            .. _Venusian: http://docs.pylonsproject.org/projects/"""
+             """venusian/en/latest/api.html#venusian.attach
+            """)
             tag = getattr(scanner, 'tag', None)
             if tag is not self:
                 return
