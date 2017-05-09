@@ -14,12 +14,12 @@ EVIL_COMMANDS = gather.Collector()
 
 @NICE_COMMANDS.register()
 def main1(args):
-    """Plugin registering as name of function"""
+    """Plugin registered with name of function"""
     return 'main1', args
 
 @NICE_COMMANDS.register(name='weird_name')
 def main2(args):
-    """Plugin registering as explicit name"""
+    """Plugin registered with explicit name"""
     return 'main2', args
 
 @NICE_COMMANDS.register(name='bar')
@@ -30,19 +30,19 @@ def main3(args):
 
 @EVIL_COMMANDS.register(name='baz')
 def main4(args):
-    """Plugin registering for the other collector"""
+    """Plugin registered for the other collector"""
     return 'main4', args
 
 @_helper.weird_decorator
 def weird_function():
-    """Plugin using a wrapper to register"""
+    """Plugin using a wrapper function to register"""
     pass
 
 TRANSFORM_COMMANDS = gather.Collector()
 
 @TRANSFORM_COMMANDS.register(transform=gather.Wrapper.glue(5))
 def fooish():
-    """Plugin registering with a transformation"""
+    """Plugin registered with a transformation"""
     pass
 
 CONFLICTING_COMMANDS = gather.Collector()
@@ -52,17 +52,17 @@ NON_CONFLICTING_COMMANDS = gather.Collector()
 @NON_CONFLICTING_COMMANDS.register(name='weird_name')
 @CONFLICTING_COMMANDS.register(name='weird_name')
 def weird_name1():
-    """One of several commands registering for same name"""
+    """One of several commands registered for same name"""
     pass
 
 @CONFLICTING_COMMANDS.register(name='weird_name')
 def weird_name2():
-    """One of several commands registering for same name"""
+    """One of several commands registered for same name"""
     pass
 
 @CONFLICTING_COMMANDS.register(name='weird_name')
 def weird_name3():
-    """One of several commands registering for same name"""
+    """One of several commands registered for same name"""
     pass
 
 class CollectorTest(unittest.TestCase):
@@ -70,7 +70,7 @@ class CollectorTest(unittest.TestCase):
     """Tests for collecting plugins"""
 
     def test_collecting(self):
-        """Collecting gives only the registered plugins for given collector"""
+        """Collecting gives only the registered plugins for a given collector"""
         collected = NICE_COMMANDS.collect()
         self.assertIn('main1', collected)
         self.assertIs(collected['main1'], main1)
@@ -90,7 +90,7 @@ class CollectorTest(unittest.TestCase):
         self.assertIn('weird_function', collected)
 
     def test_transform(self):
-        """Collecting transformd plugins applies transform on collection"""
+        """Collecting transformed plugins applies transform on collection"""
         collected = TRANSFORM_COMMANDS.collect()
         self.assertIn('fooish', collected)
         res = collected.pop('fooish')
@@ -98,16 +98,24 @@ class CollectorTest(unittest.TestCase):
         self.assertEquals(res.extra, 5)
 
     def test_one_of_strategy(self):
-        """:code:`one_of` strategy returns one of the registered plugin for name"""
+        """:code:`one_of` strategy returns one of the registered plugins
+
+        The :code:`one_of` strategy returns one of the registered plugins
+        for a given name.
+        """
         collected = CONFLICTING_COMMANDS.collect()
         weird_name = collected.pop('weird_name')
         self.assertEquals(collected, {})
         self.assertIn(weird_name, (weird_name1, weird_name2, weird_name3))
 
     def test_explicit_one_of_strategy(self):
-        """:code:`one_of` strategy returns one of the registered plugin
+        """:code:`one_of` strategy returns one of the registered plugins
 
-        Test gives strategy explicitly for name when asked explicitly"""
+        When asking explicitly for the :code:`one_of` strategy
+        (as opposed to taking advantage of the default being that strategy)
+        asking for a plugin by name gives one of the plugins registered
+        to that name.
+        """
         collected = CONFLICTING_COMMANDS.collect(strategy=gather.Collector.one_of)
         weird_name = collected.pop('weird_name')
         self.assertEquals(collected, {})
