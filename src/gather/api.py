@@ -125,11 +125,11 @@ class Collector(object):
                 effective_name = name
             objct = transform(objct)
             scanner.update(effective_name, objct)
-        def ret(func):
+        def attach(func):
             """Attach callback to be called when object is scanned"""
             venusian.attach(func, callback, depth=self.depth)
             return func
-        return ret
+        return attach
 
     def collect(self, strategy=one_of.__func__):
         """Collect all registered.
