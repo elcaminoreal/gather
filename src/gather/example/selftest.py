@@ -9,7 +9,11 @@ from gather.example import main as cemain
 
 @cemain.COMMANDS.register()
 def selftest(_args):
-    """Use example plugins to run a self-test"""
+    """Use example plugins to run a self-test
+
+    This subcommand runs other subcommands that are registered,
+    to see that registration in general works correctly.
+    """
     command_prefix = [sys.executable, '-m', 'gather.example']
     hello = command_prefix + ['hello', 'world']
     res = subprocess.check_output(hello).decode('utf-8')
