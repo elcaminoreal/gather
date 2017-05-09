@@ -45,22 +45,22 @@ def fooish():
     """Plugin registered with a transformation"""
     pass
 
-CONFLICTING_COMMANDS = gather.Collector()
+COLLIDING_COMMANDS = gather.Collector()
 
-NON_CONFLICTING_COMMANDS = gather.Collector()
+NON_COLLIDING_COMMANDS = gather.Collector()
 
-@NON_CONFLICTING_COMMANDS.register(name='weird_name')
-@CONFLICTING_COMMANDS.register(name='weird_name')
+@NON_COLLIDING_COMMANDS.register(name='weird_name')
+@COLLIDING_COMMANDS.register(name='weird_name')
 def weird_name1():
     """One of several commands registered for same name"""
     pass
 
-@CONFLICTING_COMMANDS.register(name='weird_name')
+@COLLIDING_COMMANDS.register(name='weird_name')
 def weird_name2():
     """One of several commands registered for same name"""
     pass
 
-@CONFLICTING_COMMANDS.register(name='weird_name')
+@COLLIDING_COMMANDS.register(name='weird_name')
 def weird_name3():
     """One of several commands registered for same name"""
     pass
@@ -103,7 +103,7 @@ class CollectorTest(unittest.TestCase):
         The :code:`one_of` strategy returns one of the registered plugins
         for a given name.
         """
-        collected = CONFLICTING_COMMANDS.collect()
+        collected = COLLIDING_COMMANDS.collect()
         weird_name = collected.pop('weird_name')
         self.assertEquals(collected, {})
         self.assertIn(weird_name, (weird_name1, weird_name2, weird_name3))
@@ -116,25 +116,25 @@ class CollectorTest(unittest.TestCase):
         asking for a plugin by name gives one of the plugins registered
         to that name.
         """
-        collected = CONFLICTING_COMMANDS.collect(strategy=gather.Collector.one_of)
+        collected = COLLIDING_COMMANDS.collect(strategy=gather.Collector.one_of)
         weird_name = collected.pop('weird_name')
         self.assertEquals(collected, {})
         self.assertIn(weird_name, (weird_name1, weird_name2, weird_name3))
 
     def test_all_strategy(self):
         """:code:`all` strategy returns all the registered plugins for name"""
-        collected = CONFLICTING_COMMANDS.collect(strategy=gather.Collector.all)
+        collected = COLLIDING_COMMANDS.collect(strategy=gather.Collector.all)
         weird_name = collected.pop('weird_name')
         self.assertEquals(collected, {})
         self.assertEquals(weird_name, set([weird_name1, weird_name2, weird_name3]))
 
-    def test_conflicting_strategy(self):
-        """:code:`conflict` strategy raises exception on conflict
+    def test_exactly_one_strategy(self):
+        """:code:`exactly_one` strategy raises exception on collision
 
-        A conflict is when two plugins are registered to the same name"""
+        A collision is when two plugins are registered to the same name"""
         with self.assertRaises(ValueError):
-            CONFLICTING_COMMANDS.collect(strategy=gather.Collector.conflict)
-        collected = NON_CONFLICTING_COMMANDS.collect(strategy=gather.Collector.conflict)
+            COLLIDING_COMMANDS.collect(strategy=gather.Collector.exactly_one)
+        collected = NON_COLLIDING_COMMANDS.collect(strategy=gather.Collector.exactly_one)
         weird_name = collected.pop('weird_name')
         self.assertEquals(collected, {})
         self.assertEquals(weird_name, weird_name1)

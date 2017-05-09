@@ -37,7 +37,7 @@ def _get_modules():
         module = importlib.import_module(entry_point.module_name)
         yield module
 
-class GatherConflictError(ValueError):
+class GatherCollisionError(ValueError):
     """Two or more plugins registered for the same name."""
 
 @attr.s(frozen=True)
@@ -79,15 +79,15 @@ class Collector(object):
         return myset
 
     @staticmethod
-    def conflict(registry, effective_name, objct):
-        """Raise an error on conflicting registration.
+    def exactly_one(registry, effective_name, objct):
+        """Raise an error on colliding registration.
 
         If more than one item is registered to the
-        same name, raise a :code:`GatherConflictError`.
+        same name, raise a :code:`GatherCollisionError`.
         """
         if effective_name in registry:
-            raise GatherConflictError("Attempt to double register",
-                                      registry, effective_name, objct)
+            raise GatherCollisionError("Attempt to double register",
+                                       registry, effective_name, objct)
         return objct
 
     def register(self, name=None, transform=lambda x: x):
@@ -168,7 +168,7 @@ class _ScannerParameters(object):
         try:
             res = self._strategy(self.registry, name, objct)
             self.registry[name] = res
-        except GatherConflictError as exc:
+        except GatherCollisionError as exc:
             self._please_raise = exc
 
     def raise_if_needed(self):
