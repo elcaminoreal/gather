@@ -31,28 +31,28 @@ def breakfast(_args):
 class Eggs(object):
     """Eggs plugin for breakfast"""
     def prepare(self):
-        """Scramble the eggs"""
+        """Prepare eggs by scrambling"""
         print("Scrambling eggs")
     def eat(self):
-        """Devour the eggs"""
+        """Eat the eggs by devouring"""
         print("Devouring eggs")
 
 @BREAKFAST.register()
 class Cereal(object):
     """Cereal plugin for breakfast"""
     def prepare(self):
-        """Mix it with milk"""
+        """Prepare cereal by mixing it with milk"""
         print("Mixing cereal and milk")
     def eat(self):
-        """Eat it with a spoon"""
+        """Eat cereal with a spoon"""
         print("Eating cereal with a spoon")
 
 @BREAKFAST.register()
 class OrangeJuice(object):
     """OJ plugin for breakfast"""
     def prepare(self):
-        """Squeeze it"""
+        """Prepare juice by squeezing it"""
         print("Squeezing orange juice")
     def eat(self):
-        """Drink it"""
+        """Consume the juice by drinking it"""
         print("Drinking orange juice")
