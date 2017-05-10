@@ -7,9 +7,11 @@ import sys
 
 from gather.example import main as cemain
 
+
 @cemain.COMMANDS.register()
 def selftest(_args):
-    """Use example plugins to run a self-test
+    """
+    Use example plugins to run a self-test
 
     This subcommand runs other subcommands that are registered,
     to see that registration in general works correctly.
