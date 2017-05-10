@@ -25,7 +25,7 @@ def main2(args):
 @NICE_COMMANDS.register(name='bar')
 @EVIL_COMMANDS.register(name='weird_name')
 def main3(args):
-    """Plugin registering for two collectors"""
+    """Plugin registered for two collectors"""
     return 'main3', args
 
 @EVIL_COMMANDS.register(name='baz')
@@ -138,6 +138,7 @@ class CollectorTest(unittest.TestCase):
         weird_name = collected.pop('weird_name')
         self.assertEquals(collected, {})
         self.assertEquals(weird_name, weird_name1)
+
 
 class RunTest(unittest.TestCase):
 
