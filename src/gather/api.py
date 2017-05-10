@@ -37,7 +37,7 @@ def _get_modules():
         module = importlib.import_module(entry_point.module_name)
         yield module
 
-class GatherConflictError(ValueError):
+class GatherCollisionError(ValueError):
     """Two or more plugins registered for the same name."""
 
 @attr.s(frozen=True)
@@ -79,15 +79,15 @@ class Collector(object):
         return myset
 
     @staticmethod
-    def conflict(registry, effective_name, objct):
-        """Raise an error on conflicting registration.
+    def exactly_one(registry, effective_name, objct):
+        """Raise an error on colliding registration.
 
         If more than one item is registered to the
-        same name, raise a :code:`GatherConflictError`.
+        same name, raise a :code:`GatherCollisionError`.
         """
         if effective_name in registry:
-            raise GatherConflictError("Attempt to double register",
-                                      registry, effective_name, objct)
+            raise GatherCollisionError("Attempt to double register",
+                                       registry, effective_name, objct)
         return objct
 
     def register(self, name=None, transform=lambda x: x):
@@ -111,6 +111,11 @@ class Collector(object):
                 pass
         """
         def callback(scanner, inner_name, objct):
+            ("""Venusian_ callback to be called from scan
+
+            .. _Venusian: http://docs.pylonsproject.org/projects/"""
+             """venusian/en/latest/api.html#venusian.attach
+            """)
             tag = getattr(scanner, 'tag', None)
             if tag is not self:
                 return
@@ -120,10 +125,11 @@ class Collector(object):
                 effective_name = name
             objct = transform(objct)
             scanner.update(effective_name, objct)
-        def ret(func):
+        def attach(func):
+            """Attach callback to be called when object is scanned"""
             venusian.attach(func, callback, depth=self.depth)
             return func
-        return ret
+        return attach
 
     def collect(self, strategy=one_of.__func__):
         """Collect all registered.
@@ -131,6 +137,11 @@ class Collector(object):
         Returns a dictionary mapping names to registered elements.
         """
         def ignore_import_error(_unused):
+            """Ignore ImportError while collecting.
+
+            Some modules raise import errors for various reasons,
+            and should be just treated as missing.
+            """
             if not issubclass(sys.exc_info()[0], ImportError):
                 raise # pragma: no cover
         params = _ScannerParameters(strategy=strategy)
@@ -157,7 +168,7 @@ class _ScannerParameters(object):
         try:
             res = self._strategy(self.registry, name, objct)
             self.registry[name] = res
-        except GatherConflictError as exc:
+        except GatherCollisionError as exc:
             self._please_raise = exc
 
     def raise_if_needed(self):
@@ -208,6 +219,7 @@ class Wrapper(object):
         of a :code:`register` call.
         """
         def ret(original):
+            """Return a :code:`Wrapper` with the original and extra"""
             return cls(original=original, extra=extra)
         return ret
 
