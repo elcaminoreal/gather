@@ -7,5 +7,5 @@ Provides gather version information.
 
 from incremental import Version
 
-__version__ = Version('gather', 17, 4, 2)
+__version__ = Version('gather', 17, 5, 0)
 __all__ = ["__version__"]
