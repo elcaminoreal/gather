@@ -95,7 +95,7 @@ class CollectorTest(unittest.TestCase):
         self.assertIn('fooish', collected)
         res = collected.pop('fooish')
         self.assertIs(res.original, fooish)
-        self.assertEquals(res.extra, 5)
+        self.assertEqual(res.extra, 5)
 
     def test_one_of_strategy(self):
         """:code:`one_of` strategy returns one of the registered plugins
@@ -105,7 +105,7 @@ class CollectorTest(unittest.TestCase):
         """
         collected = COLLIDING_COMMANDS.collect()
         weird_name = collected.pop('weird_name')
-        self.assertEquals(collected, {})
+        self.assertEqual(collected, {})
         self.assertIn(weird_name, (weird_name1, weird_name2, weird_name3))
 
     def test_explicit_one_of_strategy(self):
@@ -118,15 +118,15 @@ class CollectorTest(unittest.TestCase):
         """
         collected = COLLIDING_COMMANDS.collect(strategy=gather.Collector.one_of)
         weird_name = collected.pop('weird_name')
-        self.assertEquals(collected, {})
+        self.assertEqual(collected, {})
         self.assertIn(weird_name, (weird_name1, weird_name2, weird_name3))
 
     def test_all_strategy(self):
         """:code:`all` strategy returns all the registered plugins for name"""
         collected = COLLIDING_COMMANDS.collect(strategy=gather.Collector.all)
         weird_name = collected.pop('weird_name')
-        self.assertEquals(collected, {})
-        self.assertEquals(weird_name, set([weird_name1, weird_name2, weird_name3]))
+        self.assertEqual(collected, {})
+        self.assertEqual(weird_name, set([weird_name1, weird_name2, weird_name3]))
 
     def test_exactly_one_strategy(self):
         """:code:`exactly_one` strategy raises exception on collision
@@ -136,8 +136,8 @@ class CollectorTest(unittest.TestCase):
             COLLIDING_COMMANDS.collect(strategy=gather.Collector.exactly_one)
         collected = NON_COLLIDING_COMMANDS.collect(strategy=gather.Collector.exactly_one)
         weird_name = collected.pop('weird_name')
-        self.assertEquals(collected, {})
-        self.assertEquals(weird_name, weird_name1)
+        self.assertEqual(collected, {})
+        self.assertEqual(weird_name, weird_name1)
 
 
 class RunTest(unittest.TestCase):
@@ -155,7 +155,7 @@ class RunTest(unittest.TestCase):
             version='0.1.2',
             output=output,
         )
-        self.assertEquals(things.pop(), ['simple', 'world'])
+        self.assertEqual(things.pop(), ['simple', 'world'])
 
     def test_invalid(self):
         """Invalid Subcommand causes help to be printed"""
@@ -169,8 +169,8 @@ class RunTest(unittest.TestCase):
             output=output,
         )
         lines = output.getvalue().splitlines()
-        self.assertEquals(lines.pop(0), 'Available subcommands:')
-        self.assertEquals(lines.pop(0).strip(), 'simple')
+        self.assertEqual(lines.pop(0), 'Available subcommands:')
+        self.assertEqual(lines.pop(0).strip(), 'simple')
         self.assertIn('--help', lines.pop(0))
 
     def test_empty(self):
@@ -185,8 +185,8 @@ class RunTest(unittest.TestCase):
             output=output,
         )
         lines = output.getvalue().splitlines()
-        self.assertEquals(lines.pop(0), 'Available subcommands:')
-        self.assertEquals(lines.pop(0).strip(), 'simple')
+        self.assertEqual(lines.pop(0), 'Available subcommands:')
+        self.assertEqual(lines.pop(0).strip(), 'simple')
         self.assertIn('--help', lines.pop(0))
 
     def test_version(self):
@@ -201,4 +201,4 @@ class RunTest(unittest.TestCase):
             output=output,
         )
         lines = output.getvalue().splitlines()
-        self.assertEquals(lines.pop(0), 'Version 0.1.2')
+        self.assertEqual(lines.pop(0), 'Version 0.1.2')
