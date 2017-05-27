@@ -36,8 +36,8 @@ We are happy to give guidance as to fixing.
 Contributors
 =============
 
-Moshe Zadka <zadka.moshe@gmail.com>
-Mark R. Williams
+* Moshe Zadka <zadka.moshe@gmail.com>
+* Mark R. Williams
 
 License
 =======
