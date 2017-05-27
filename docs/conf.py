@@ -11,6 +11,7 @@ import gather
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
+    'sphinx.ext.napoleon',
 ]
 master_doc = 'index'
 project = 'Gather'

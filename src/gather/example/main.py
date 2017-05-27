@@ -2,6 +2,8 @@
 
 from __future__ import print_function
 
+import sys
+
 import gather
 
 COMMANDS = gather.Collector()
@@ -12,13 +14,13 @@ BREAKFAST = gather.Collector()
 @COMMANDS.register()
 def hello(args):
     """Say hello, print arguments"""
-    print("Hello", args)
+    sys.stdout.write("Hello {}\n".format(args))
 
 
 @COMMANDS.register()
 def goodbye(args):
     """Say goodbye, print arguments"""
-    print("Goodbye", args)
+    sys.stdout.write("Goodbye {}\n".format(args))
 
 
 @COMMANDS.register()
@@ -38,11 +40,11 @@ class Eggs(object):
 
     def prepare(self):
         """Prepare eggs by scrambling"""
-        print("Scrambling eggs")
+        sys.stdout.write("Scrambling eggs\n")
 
     def eat(self):
         """Eat the eggs by devouring"""
-        print("Devouring eggs")
+        sys.stdout.write("Devouring eggs\n")
 
 
 @BREAKFAST.register()
@@ -52,11 +54,11 @@ class Cereal(object):
 
     def prepare(self):
         """Prepare cereal by mixing it with milk"""
-        print("Mixing cereal and milk")
+        sys.stdout.write("Mixing cereal and milk\n")
 
     def eat(self):
         """Eat cereal with a spoon"""
-        print("Eating cereal with a spoon")
+        sys.stdout.write("Eating cereal with a spoon\n")
 
 
 @BREAKFAST.register()
@@ -66,8 +68,8 @@ class OrangeJuice(object):
 
     def prepare(self):
         """Prepare juice by squeezing it"""
-        print("Squeezing orange juice")
+        sys.stdout.write("Squeezing orange juice\n")
 
     def eat(self):
         """Consume the juice by drinking it"""
-        print("Drinking orange juice")
+        sys.stdout.write("Drinking orange juice\n")
