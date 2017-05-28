@@ -8,31 +8,31 @@ import gather
 
 from gather.tests import _helper
 
-NICE_COMMANDS = gather.Collector()
+MAIN_COMMANDS = gather.Collector()
 
-EVIL_COMMANDS = gather.Collector()
+OTHER_COMMANDS = gather.Collector()
 
 
-@NICE_COMMANDS.register()
+@MAIN_COMMANDS.register()
 def main1(args):
     """Plugin registered with name of function"""
     return 'main1', args
 
 
-@NICE_COMMANDS.register(name='weird_name')
+@MAIN_COMMANDS.register(name='weird_name')
 def main2(args):
     """Plugin registered with explicit name"""
     return 'main2', args
 
 
-@NICE_COMMANDS.register(name='bar')
-@EVIL_COMMANDS.register(name='weird_name')
+@MAIN_COMMANDS.register(name='bar')
+@OTHER_COMMANDS.register(name='weird_name')
 def main3(args):
     """Plugin registered for two collectors"""
     return 'main3', args
 
 
-@EVIL_COMMANDS.register(name='baz')
+@OTHER_COMMANDS.register(name='baz')
 def main4(args):
     """Plugin registered for the other collector"""
     return 'main4', args
@@ -78,15 +78,15 @@ class CollectorTest(unittest.TestCase):
 
     def test_collecting(self):
         """Collecting gives only the registered plugins for a given collector"""
-        collected = NICE_COMMANDS.collect()
+        collected = MAIN_COMMANDS.collect()
         self.assertIn('main1', collected)
         self.assertIs(collected['main1'], main1)
         self.assertNotIn('baz', collected)
 
     def test_non_collision(self):
         """Collecting with same name for different collectors does not collide"""
-        nice = NICE_COMMANDS.collect()
-        evil = EVIL_COMMANDS.collect()
+        nice = MAIN_COMMANDS.collect()
+        evil = OTHER_COMMANDS.collect()
         self.assertIs(nice['weird_name'], main2)
         self.assertIs(nice['bar'], main3)
         self.assertIs(evil['weird_name'], main3)
