@@ -37,7 +37,7 @@ Contributors
 =============
 
 * Moshe Zadka <zadka.moshe@gmail.com>
-* Mark R. Williams
+* Mark R. Williams <mrw@enotuniq.org>
 
 License
 =======
