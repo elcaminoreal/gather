@@ -106,7 +106,8 @@ class Collector(object):
         Register a class or function
 
         Args:
-            name (str): optional. Name to register the class or function as (default is name of object)
+            name (str): optional. Name to register the class or function as.
+                        (default is name of object)
             transform (callable): optional. A one-argument function. Will be called,
                           and the return value used in collection.
                           Default is identity function
