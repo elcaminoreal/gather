@@ -85,11 +85,11 @@ class CollectorTest(unittest.TestCase):
 
     def test_non_collision(self):
         """Collecting with same name for different collectors does not collide"""
-        nice = MAIN_COMMANDS.collect()
-        evil = OTHER_COMMANDS.collect()
-        self.assertIs(nice['weird_name'], main2)
-        self.assertIs(nice['bar'], main3)
-        self.assertIs(evil['weird_name'], main3)
+        main = MAIN_COMMANDS.collect()
+        other = OTHER_COMMANDS.collect()
+        self.assertIs(main['weird_name'], main2)
+        self.assertIs(main['bar'], main3)
+        self.assertIs(other['weird_name'], main3)
 
     def test_cross_module_collection(self):
         """Collection works when plugins are registered in a different module"""
