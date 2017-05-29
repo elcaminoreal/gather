@@ -135,9 +135,9 @@ class CollectorTest(unittest.TestCase):
         """:code:`all` strategy returns all the registered plugins for name"""
         collected = COLLIDING_COMMANDS.collect(strategy=gather.Collector.all)
         weird_name = collected.pop('weird_name')
-        self.assertEquals(collected, {})
-        self.assertEquals(weird_name,
-                          set([weird_name1, weird_name2, weird_name3]))
+        self.assertEqual(collected, {})
+        self.assertEqual(weird_name,
+                         set([weird_name1, weird_name2, weird_name3]))
 
     def test_exactly_one_strategy(self):
         """
