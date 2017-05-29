@@ -1,7 +1,4 @@
 """Commands for self-test/example"""
-
-from __future__ import print_function
-
 import sys
 
 import gather

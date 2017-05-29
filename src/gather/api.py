@@ -21,8 +21,6 @@ i.e., what users are expected to :code:`import` at the top-level.
 Note that while having special facilities to run functions as subcommands,
 Gather can be used to collect anything.
 """
-from __future__ import print_function
-
 import importlib
 import sys
 
@@ -48,7 +46,7 @@ def _one_of(_registry, _effective_name, objct):
     Assign one of the possible options.
 
     When given as a collection strategy to :code:`collect`,
-    will assign one of the options to a name in case more
+    this will assign one of the options to a name in case more
     than one item is registered to the same name.
 
     This is the default.
@@ -105,10 +103,10 @@ class Collector(object):
 
     def register(self, name=None, transform=lambda x: x):
         """
-        Register
+        Register a class or function
 
         Args:
-            name (str): optional. Name to register as (default is name of object)
+            name (str): optional. Name to register the class or function as (default is name of object)
             transform (callable): optional. A one-argument function. Will be called,
                           and the return value used in collection.
                           Default is identity function
@@ -127,7 +125,7 @@ class Collector(object):
         """
         def callback(scanner, inner_name, objct):
             ("""
-            Venusian_ callback to be called from scan
+            Venusian_ callback, called from scan
 
             .. _Venusian: http://docs.pylonsproject.org/projects/"""
              """venusian/en/latest/api.html#venusian.attach
@@ -150,13 +148,13 @@ class Collector(object):
 
     def collect(self, strategy=one_of.__func__):
         """
-        Collect all registered.
+        Collect all registered functions or classes.
 
         Returns a dictionary mapping names to registered elements.
         """
         def ignore_import_error(_unused):
             """
-            Ignore ImportError while collecting.
+            Ignore ImportError during collection.
 
             Some modules raise import errors for various reasons,
             and should be just treated as missing.
@@ -201,7 +199,7 @@ class _ScannerParameters(object):
 
 def run(argv, commands, version, output):
     """
-    Run the correct subcommand.
+    Run the specified subcommand.
 
     Args:
         argv (list of str): Arguments to be processed
