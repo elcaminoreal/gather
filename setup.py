@@ -17,7 +17,7 @@ setuptools.setup(
     install_requires=['attrs', 'incremental', 'venusian', 'six'],
     entry_points={
         'gather': [
-             "gather=gather:gather",
+             "gather=gather",
         ]
     }
 )
