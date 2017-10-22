@@ -67,7 +67,7 @@ registering an entry point in the :code:`setup.py`:
 
     entry_points={
         'gather': [
-             "dummy=ROOT_PACKAGE:dummy",
+             "gather=ROOT_PACKAGE",
         ]
 
 Putting the package name there is enough -- :code:`gather`
