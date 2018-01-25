@@ -13,6 +13,11 @@ setuptools.setup(
     author="Moshe Zadka",
     author_email="zadka.moshe@gmail.com",
     packages=setuptools.find_packages(where='src'),
+    project_urls={
+        'Development': 'https://github.com/elcaminoreal/gather',
+        'Documentation': 'https://gather.readthedocs.io/en/latest/',
+        'Blog': 'https://gather.works',
+    }
     package_dir={"": "src"},
     install_requires=['attrs', 'incremental', 'venusian', 'six'],
     entry_points={
