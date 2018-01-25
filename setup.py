@@ -17,7 +17,7 @@ setuptools.setup(
         'Development': 'https://github.com/elcaminoreal/gather',
         'Documentation': 'https://gather.readthedocs.io/en/latest/',
         'Blog': 'https://gather.works',
-    }
+    },
     package_dir={"": "src"},
     install_requires=['attrs', 'incremental', 'venusian', 'six'],
     entry_points={
