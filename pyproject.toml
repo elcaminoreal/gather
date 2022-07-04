@@ -15,7 +15,7 @@ dependencies = ["attrs", "incremental", "venusian"]
 [project.optional-dependencies]
 tests = ["virtue", "pyhamcrest", "coverage[toml]"]
 mypy = ["mypy"]
-lint = ["flake8", "black"]
+lint = ["flake8", "black", "pylint"]
 docs = ["sphinx"]
 
 [tool.coverage.run]
