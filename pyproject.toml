@@ -6,17 +6,20 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gather"
-version = "2022.3.6.2"
+version = "2022.7.3.1"
 description = "A gatherer"
 readme = "README.rst"
 authors = [{name = "Moshe Zadka", email = "moshez@zadka.club"}]
 dependencies = ["attrs", "incremental", "venusian"]
 
 [project.optional-dependencies]
-tests = ["virtue", "pyhamcrest", "coverage"]
+tests = ["virtue", "pyhamcrest", "coverage[toml]"]
 mypy = ["mypy"]
 lint = ["flake8", "black"]
 docs = ["sphinx"]
+
+[tool.coverage.run]
+omit = ["build/*", "*/tests/*", "*/example/*", "**/__main__.py"]
 
 [project.license]
 text = """

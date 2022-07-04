@@ -2,8 +2,6 @@
 
 import unittest
 
-import six
-
 import gather
 
 from gather.tests import _helper
@@ -162,7 +160,7 @@ class RunTest(unittest.TestCase):
         """Subcommand calls the registered plugin for name of subcommand"""
         things = []
         commands = dict(simple=things.append)
-        output = six.StringIO()
+        output = io.StringIO()
         gather.run(
             argv=['simple', 'world'],
             commands=commands,
@@ -175,7 +173,7 @@ class RunTest(unittest.TestCase):
         """Invalid Subcommand causes help to be printed"""
         things = []
         commands = dict(simple=things.append)
-        output = six.StringIO()
+        output = io.StringIO()
         gather.run(
             argv=['lala'],
             commands=commands,
@@ -191,7 +189,7 @@ class RunTest(unittest.TestCase):
         """Empty subcommand causes help to be printed"""
         things = []
         commands = dict(simple=things.append)
-        output = six.StringIO()
+        output = io.StringIO()
         gather.run(
             argv=[],
             commands=commands,
@@ -207,7 +205,7 @@ class RunTest(unittest.TestCase):
         """Version subcommand causes version to be printed"""
         things = []
         commands = dict(simple=things.append)
-        output = six.StringIO()
+        output = io.StringIO()
         gather.run(
             argv=['version'],
             commands=commands,

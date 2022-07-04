@@ -20,7 +20,6 @@ def tests(session):
         "run",
         "--branch",
         "--source=gather",
-        "--omit=**/__main__.py",
         "-m",
         "virtue",
         *tests,
