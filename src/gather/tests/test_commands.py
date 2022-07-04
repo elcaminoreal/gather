@@ -21,6 +21,7 @@ COMMANDS_COLLECTOR = gather.Collector()
 
 REGISTER = commands.make_command_register(COMMANDS_COLLECTOR)
 
+
 @REGISTER(
     add_argument("--value", default="default-value"),
     name="do-something",
@@ -30,7 +31,8 @@ def do_something(*, args, env, run):
     print(args.value)
     print(env["SHELL"])
     run([sys.executable, "-c", "print(2)"], check=True)
-    
+
+
 @REGISTER(
     add_argument("--no-dry-run", action="store_true"),
     name="do-something-else",
@@ -40,17 +42,19 @@ def do_something_else(*, args, env, run):
     print(env["SHELL"])
     run([sys.executable, "-c", "print(3)"], check=True)
 
+
 class CommandTest(unittest.TestCase):
-    
     def setUp(self):
         mock_output = mock.patch("sys.stdout", new=io.StringIO())
         self.addCleanup(mock_output.stop)
         self.fake_stdout = mock_output.start()
+
         def mini_python(argv, *args, check=False, **kwargs):
             if argv[:2] != [sys.executable, "-c"]:
                 raise ValueError("only minipython", argv)
             details = argv[2].removeprefix("python(").removesuffix(")")
             print(details)
+
         self.fake_run = mock.MagicMock(side_effect=mini_python)
 
     def test_simple_command(self):
@@ -59,7 +63,7 @@ class CommandTest(unittest.TestCase):
             parser=parser,
             argv=["command", "do-something"],
             env=dict(SHELL="some-shell"),
-            sp_run=self.fake_run
+            sp_run=self.fake_run,
         )
         output = self.fake_stdout.getvalue()
         assert_that(
