@@ -11,11 +11,11 @@ REGISTER = commands.make_command_register(COMMANDS_COLLECTOR)
     name="do-something",
 )
 def do_something(*, args, env, run):
-    pass
+    print(args, env, run)
 
 @REGISTER(
     add_argument("--no-dry-run", action="store_true"),
     name="do-something-else",
 )
 def do_something_else(*, args, env, run):
-    pass
+    print(args, env, run)

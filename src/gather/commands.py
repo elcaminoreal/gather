@@ -33,10 +33,18 @@ def set_parser(*, collected, parser=None):
         args = details.extra
         a_subparser = subparsers.add_parser(name)
         a_subparser.set_defaults(
-            __gather__name__=name,
-            __gather__command__=original,
+            __gather_name__=name,
+            __gather_command__=original,
         )
         for arg_details in args:
             a_subparser.add_argument(*arg_details.args, **dict(arg_details.kwargs))
     return parser
-        
+
+def run(*, parser, argv, env, sp_run):
+    args = parser.parse_args(argv[1:])
+    command = args.__gather_command__
+    return command(
+        args=args,
+        env=env,
+        run=sp_run,
+    )
