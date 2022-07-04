@@ -1,3 +1,5 @@
+"""Registration and dispatch to sub-commands"""
+
 from __future__ import annotations
 import argparse
 import os
@@ -45,7 +47,7 @@ def make_command_register(collector):
     """
 
     def _register(*args, name=None):
-        a_transform = transform(*args)
+        a_transform = _transform(*args)
         return collector.register(transform=a_transform, name=name)
 
     return _register
