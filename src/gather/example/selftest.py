@@ -16,12 +16,12 @@ def selftest(_args):
     This subcommand runs other subcommands that are registered,
     to see that registration in general works correctly.
     """
-    command_prefix = [sys.executable, '-m', 'gather.example']
-    hello = command_prefix + ['hello', 'world']
-    res = subprocess.check_output(hello).decode('utf-8')
+    command_prefix = [sys.executable, "-m", "gather.example"]
+    hello = command_prefix + ["hello", "world"]
+    res = subprocess.check_output(hello).decode("utf-8")
     greeting, contents = res.split(None, 1)
-    if greeting != 'Hello':
+    if greeting != "Hello":
         raise ValueError("Incorrect greeting", res)
     parsed = ast.literal_eval(contents)
-    if parsed != ['hello', 'world']:
+    if parsed != ["hello", "world"]:
         raise ValueError("Incorrect arguments", res)

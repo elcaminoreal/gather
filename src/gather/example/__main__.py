@@ -6,7 +6,7 @@ import gather
 
 from gather.example import main
 
-if __name__ != '__main__':
+if __name__ != "__main__":
     raise ImportError("module cannot be imported")
 
 gather.run(
