@@ -194,4 +194,4 @@ class Wrapper(object):
         return ret
 
 
-__all__ = ["Collector", "run", "Wrapper"]
+__all__ = ["Collector", "unique", "Wrapper"]
