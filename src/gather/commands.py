@@ -1,4 +1,5 @@
 from __future__ import annotations
+import argparse
 
 import attrs
 
@@ -31,7 +32,7 @@ def set_parser(*, collected, parser=None):
         original = details.original
         args = details.extra
         a_subparser = subparsers.add_parser(name)
-        a_subparser.setdefaults(
+        a_subparser.set_defaults(
             __gather__name__=name,
             __gather__command__=original,
         )

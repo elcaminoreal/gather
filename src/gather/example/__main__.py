@@ -4,7 +4,5 @@ if __name__ != "__main__":
 from gather import commands
 from . import main
 
-
-collected = main.COMMANDS_COLLECTOR.collect()
-print(collected)
-parser = commands.set_parser(collected)
+parser = commands.set_parser(collected=main.COMMANDS_COLLECTOR.collect())
+parser.parse_args()
