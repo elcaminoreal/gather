@@ -3,24 +3,9 @@ import sys
 
 import gather
 
-COMMANDS = gather.Collector()
-
 BREAKFAST = gather.Collector()
 
 
-@COMMANDS.register()
-def hello(args):
-    """Say hello, print arguments"""
-    sys.stdout.write("Hello {}\n".format(args))
-
-
-@COMMANDS.register()
-def goodbye(args):
-    """Say goodbye, print arguments"""
-    sys.stdout.write("Goodbye {}\n".format(args))
-
-
-@COMMANDS.register()
 def breakfast(_args):
     """Collect breakfast plugins, make breakfast"""
     foods = [klass() for klass in BREAKFAST.collect().values()]
