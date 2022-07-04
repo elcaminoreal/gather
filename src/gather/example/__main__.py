@@ -1,9 +1,10 @@
 if __name__ != "__main__":
     raise ImportError("only run")
 
-import gather
+from gather import commands
 from . import main
 
 
-collected = gather.unique(main.COMMANDS_COLLECTOR.collect())
+collected = main.COMMANDS_COLLECTOR.collect()
 print(collected)
+parser = commands.set_parser(collected)
