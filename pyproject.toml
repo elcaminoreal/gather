@@ -47,5 +47,5 @@ Development = "https://github.com/elcaminoreal/gather"
 Documentation = "https://gather.readthedocs.io/en/latest/"
 Blog = "https://gather.works"
 
-[project.entry-points."gather"]
-gather = gather
+[project.entry-points.gather]
+gather = "gather"
