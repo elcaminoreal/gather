@@ -1,8 +1,16 @@
+import argparse
 import io
 import sys
 import unittest
 from unittest import mock
-from hamcrest import assert_that, string_contains_in_order, equal_to
+from hamcrest import (
+    assert_that,
+    string_contains_in_order,
+    contains_string,
+    equal_to,
+    calling,
+    raises,
+)
 
 
 import gather
@@ -12,9 +20,6 @@ from gather.commands import add_argument, transform
 COMMANDS_COLLECTOR = gather.Collector()
 
 REGISTER = commands.make_command_register(COMMANDS_COLLECTOR)
-
-def get_parser():
-    return commands.set_parser(collected=COMMANDS_COLLECTOR.collect())
 
 @REGISTER(
     add_argument("--value", default="default-value"),
@@ -49,8 +54,9 @@ class CommandTest(unittest.TestCase):
         self.fake_run = mock.MagicMock(side_effect=mini_python)
 
     def test_simple_command(self):
+        parser = commands.set_parser(collected=COMMANDS_COLLECTOR.collect())
         commands.run(
-            parser=get_parser(),
+            parser=parser,
             argv=["command", "do-something"],
             env=dict(SHELL="some-shell"),
             sp_run=self.fake_run
@@ -64,4 +70,24 @@ class CommandTest(unittest.TestCase):
                 "some-shell",
                 "2",
             ),
+        )
+
+    def test_custom_parser(self):
+        parser = commands.set_parser(
+            collected=COMMANDS_COLLECTOR.collect(),
+            parser=argparse.ArgumentParser(
+                description="this is a custom help message",
+            ),
+        )
+        assert_that(
+            calling(commands.run).with_args(
+                parser=parser,
+                argv=["command", "--help"],
+            ),
+            raises(SystemExit),
+        )
+        output = self.fake_stdout.getvalue()
+        assert_that(
+            output,
+            contains_string("custom help message"),
         )
