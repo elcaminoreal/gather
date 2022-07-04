@@ -23,6 +23,7 @@ Gather can be used to collect anything.
 """
 import importlib.metadata
 import sys
+import warnings
 
 import attr
 import venusian
@@ -163,7 +164,12 @@ class Collector(object):
         params = _ScannerParameters(strategy=strategy)
         scanner = venusian.Scanner(update=params.update, tag=self)
         for module in _get_modules():
-            scanner.scan(module, onerror=ignore_import_error)
+            # Venusian is using a newly-deprecated method to scan modules
+            warnings.filterwarnings(action="ignore", category=DeprecationWarning)
+            try:
+                scanner.scan(module, onerror=ignore_import_error)
+            finally:
+                warnings.filters.pop(0)
         params.raise_if_needed()
         return params.registry
 

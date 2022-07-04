@@ -1,4 +1,5 @@
 """Gather: The Plugin Gatherer"""
+import importlib.metadata
 
 from gather.api import Collector, run, Wrapper
 
