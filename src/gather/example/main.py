@@ -1,57 +1,33 @@
-"""Commands for self-test/example"""
+"""Example commands"""
 import sys
-
 import gather
+from gather import commands
+from gather.commands import add_argument
 
-BREAKFAST = gather.Collector()
-
-
-def breakfast(_args):
-    """Collect breakfast plugins, make breakfast"""
-    foods = [klass() for klass in BREAKFAST.collect().values()]
-    for food in foods:
-        food.prepare()
-    for food in foods:
-        food.eat()
+_COMMANDS_COLLECTOR = gather.Collector()
+REGISTER = commands.make_command_register(_COMMANDS_COLLECTOR)
 
 
-@BREAKFAST.register()
-class Eggs(object):
-
-    """Eggs plugin for breakfast"""
-
-    def prepare(self):
-        """Prepare eggs by scrambling"""
-        sys.stdout.write("Scrambling eggs\n")
-
-    def eat(self):
-        """Eat the eggs by devouring"""
-        sys.stdout.write("Devouring eggs\n")
+def get_parser():
+    """Get parser dispatching to example commands"""
+    return commands.set_parser(collected=_COMMANDS_COLLECTOR.collect())
 
 
-@BREAKFAST.register()
-class Cereal(object):
-
-    """Cereal plugin for breakfast"""
-
-    def prepare(self):
-        """Prepare cereal by mixing it with milk"""
-        sys.stdout.write("Mixing cereal and milk\n")
-
-    def eat(self):
-        """Eat cereal with a spoon"""
-        sys.stdout.write("Eating cereal with a spoon\n")
+@REGISTER(
+    add_argument("--value"),
+    name="do-something",
+)
+def _do_something(*, args, env, run):
+    print(args.value)
+    print(env["SHELL"])
+    run([sys.executable, "-c", "print(1+1)"], check=True)
 
 
-@BREAKFAST.register()
-class OrangeJuice(object):
-
-    """OJ plugin for breakfast"""
-
-    def prepare(self):
-        """Prepare juice by squeezing it"""
-        sys.stdout.write("Squeezing orange juice\n")
-
-    def eat(self):
-        """Consume the juice by drinking it"""
-        sys.stdout.write("Drinking orange juice\n")
+@REGISTER(
+    add_argument("--no-dry-run", action="store_true"),
+    name="do-something-else",
+)
+def _do_something_else(*, args, env, run):
+    print(args.no_dry_run)
+    print(env["SHELL"])
+    run([sys.executable, "-c", "print(1+1)"], check=True)
