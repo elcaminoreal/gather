@@ -1,5 +1,5 @@
 """Test gather's API"""
-
+import io
 import unittest
 
 import gather

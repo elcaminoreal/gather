@@ -21,19 +21,17 @@ i.e., what users are expected to :code:`import` at the top-level.
 Note that while having special facilities to run functions as subcommands,
 Gather can be used to collect anything.
 """
-import importlib
+import importlib.metadata
 import sys
 
-import pkg_resources
-
 import attr
-
 import venusian
 
 
 def _get_modules():
-    for entry_point in pkg_resources.iter_entry_points(group='gather'):
-        module = importlib.import_module(entry_point.module_name)
+    eps = importlib.metadata.entry_points()
+    for entry_point in eps.select(group='gather'):
+        module = importlib.import_module(entry_point.value)
         yield module
 
 
