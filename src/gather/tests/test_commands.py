@@ -1,3 +1,5 @@
+"""Test command dispatch"""
+
 import argparse
 import io
 import sys
@@ -7,7 +9,6 @@ from hamcrest import (
     assert_that,
     string_contains_in_order,
     contains_string,
-    equal_to,
     calling,
     raises,
 )
@@ -15,7 +16,7 @@ from hamcrest import (
 
 import gather
 from gather import commands
-from gather.commands import add_argument, transform
+from gather.commands import add_argument
 
 COMMANDS_COLLECTOR = gather.Collector()
 
@@ -26,7 +27,7 @@ REGISTER = commands.make_command_register(COMMANDS_COLLECTOR)
     add_argument("--value", default="default-value"),
     name="do-something",
 )
-def do_something(*, args, env, run):
+def _do_something(*, args, env, run):
     print(args.__gather_name__)
     print(args.value)
     print(env["SHELL"])
@@ -37,14 +38,18 @@ def do_something(*, args, env, run):
     add_argument("--no-dry-run", action="store_true"),
     name="do-something-else",
 )
-def do_something_else(*, args, env, run):
+def _do_something_else(*, args, env, run):
     print(args.no_dry_run)
     print(env["SHELL"])
     run([sys.executable, "-c", "print(3)"], check=True)
 
 
 class CommandTest(unittest.TestCase):
+
+    """Test command dispatch"""
+
     def setUp(self):
+        """Set up sys.stdio and a mock process runner"""
         mock_output = mock.patch("sys.stdout", new=io.StringIO())
         self.addCleanup(mock_output.stop)
         self.fake_stdout = mock_output.start()
@@ -58,6 +63,7 @@ class CommandTest(unittest.TestCase):
         self.fake_run = mock.MagicMock(side_effect=mini_python)
 
     def test_simple_command(self):
+        """Running a command dispatches to the registered function"""
         parser = commands.set_parser(collected=COMMANDS_COLLECTOR.collect())
         commands.run(
             parser=parser,
@@ -77,6 +83,7 @@ class CommandTest(unittest.TestCase):
         )
 
     def test_custom_parser(self):
+        """Custom help message is printed out"""
         parser = commands.set_parser(
             collected=COMMANDS_COLLECTOR.collect(),
             parser=argparse.ArgumentParser(

@@ -1,3 +1,5 @@
+"""Run the example commands"""
+
 if __name__ != "__main__":
     raise ImportError("only run")
 
