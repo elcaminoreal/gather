@@ -6,14 +6,18 @@ in any package, in any distribution.
 A given module can register plugins of multiple types.
 
 In order to have anything registered from a package,
-it needs to declare that it supports :code:`gather` in its `setup.py`:
+it needs to declare that it supports :code:`gather`
+in its package metadata.
+
+For example,
+with
+:code:`pyproject.toml`:
 
 .. code::
 
-    entry_points={
-        'gather': [
-             "dummy=ROOT_PACKAGE:dummy",
-        ]
+    [project.entry-points.gather]
+    ignored = "<ROOT_PACKAGE>"
+
 
 The :code:`ROOT_PACKAGE` should point to the Python name of the package:
 i.e., what users are expected to :code:`import` at the top-level.
@@ -21,19 +25,30 @@ i.e., what users are expected to :code:`import` at the top-level.
 Note that while having special facilities to run functions as subcommands,
 Gather can be used to collect anything.
 """
-import importlib
+import contextlib
+import importlib.metadata
 import sys
-
-import pkg_resources
+import warnings
 
 import attr
-
 import venusian
 
 
+@contextlib.contextmanager
+def _ignore_deprecation():
+    warnings.filterwarnings(action="ignore", category=DeprecationWarning)
+    try:
+        yield
+    finally:
+        warnings.filters.pop(0)
+
+
 def _get_modules():
-    for entry_point in pkg_resources.iter_entry_points(group='gather'):
-        module = importlib.import_module(entry_point.module_name)
+    eps = importlib.metadata.entry_points()
+    with _ignore_deprecation():
+        gather_points = eps["gather"]
+    for entry_point in gather_points:
+        module = importlib.import_module(entry_point.value)
         yield module
 
 
@@ -76,8 +91,9 @@ def _exactly_one(registry, effective_name, objct):
     same name, raise a :code:`GatherCollisionError`.
     """
     if effective_name in registry:
-        raise GatherCollisionError("Attempt to double register",
-                                   registry, effective_name, objct)
+        raise GatherCollisionError(
+            "Attempt to double register", registry, effective_name, objct
+        )
     return objct
 
 
@@ -124,14 +140,17 @@ class Collector(object):
             def main(args):
                 pass
         """
+
         def callback(scanner, inner_name, objct):
-            ("""
+            (
+                """
             Venusian_ callback, called from scan
 
             .. _Venusian: http://docs.pylonsproject.org/projects/"""
-             """venusian/en/latest/api.html#venusian.attach
-            """)
-            tag = getattr(scanner, 'tag', None)
+                """venusian/en/latest/api.html#venusian.attach
+            """
+            )
+            tag = getattr(scanner, "tag", None)
             if tag is not self:
                 return
             if name is None:
@@ -145,6 +164,7 @@ class Collector(object):
             """Attach callback to be called when object is scanned"""
             venusian.attach(func, callback, depth=self.depth)
             return func
+
         return attach
 
     def collect(self, strategy=one_of.__func__):
@@ -153,6 +173,7 @@ class Collector(object):
 
         Returns a dictionary mapping names to registered elements.
         """
+
         def ignore_import_error(_unused):
             """
             Ignore ImportError during collection.
@@ -162,10 +183,13 @@ class Collector(object):
             """
             if not issubclass(sys.exc_info()[0], ImportError):
                 raise  # pragma: no cover
+
         params = _ScannerParameters(strategy=strategy)
         scanner = venusian.Scanner(update=params.update, tag=self)
         for module in _get_modules():
-            scanner.scan(module, onerror=ignore_import_error)
+            # Venusian is using a newly-deprecated method to scan modules
+            with _ignore_deprecation():
+                scanner.scan(module, onerror=ignore_import_error)
         params.raise_if_needed()
         return params.registry
 
@@ -209,11 +233,11 @@ def run(argv, commands, version, output):
         output (file): Where to write output to
     """
     if len(argv) < 1:
-        argv = argv + ['help']
-    if argv[0] in ('version', '--version'):
+        argv = argv + ["help"]
+    if argv[0] in ("version", "--version"):
         output.write("Version {}\n".format(version))
         return
-    if argv[0] in ('help', '--help') or argv[0] not in commands:
+    if argv[0] in ("help", "--help") or argv[0] not in commands:
         output.write("Available subcommands:\n")
         for command in commands.keys():
             output.write("\t{}\n".format(command))
@@ -245,10 +269,12 @@ class Wrapper(object):
         This method is useful mainly as the :code:`transform` parameter
         of a :code:`register` call.
         """
+
         def ret(original):
             """Return a :code:`Wrapper` with the original and extra"""
             return cls(original=original, extra=extra)
+
         return ret
 
 
-__all__ = ['Collector', 'run', 'Wrapper']
+__all__ = ["Collector", "run", "Wrapper"]

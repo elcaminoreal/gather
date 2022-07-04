@@ -1,5 +1,3 @@
-# Copyright (c) Moshe Zadka
-# See LICENSE for details.
 import os
 import sys
 
@@ -13,9 +11,11 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
 ]
-master_doc = 'index'
+
+root_doc = 'index'
 project = 'Gather'
-copyright = '2017, Moshe Zadka'
+copyright = 'Copyright (c) Moshe Zadka'
 author = 'Moshe Zadka'
-version = '17.4'
-release = '17.4'
+version = ''
+
+exclude_patterns = ['.ipynb_checkpoints/**']
