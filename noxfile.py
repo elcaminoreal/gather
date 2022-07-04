@@ -48,7 +48,7 @@ def lint(session):
     session.install("-r", "requirements-lint.txt")
     session.install("-e", ".")
     session.run("black", "--check", "--diff", *files)
-    black_compat = ["--max-line-length=88", "--ignore=E203,E503"]
+    black_compat = ["--max-line-length=88", "--ignore=E203,E501"]
     session.run("flake8", *black_compat, "src/")
 
 
