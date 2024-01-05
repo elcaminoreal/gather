@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 import argparse
+import functools
+import logging
 import os
 import subprocess
 import sys
@@ -10,6 +12,8 @@ from typing import Sequence, Any, Tuple
 import attrs
 
 from .api import Wrapper, unique
+
+LOGGER = logging.getLogger(__name__)
 
 
 @attrs.frozen
@@ -83,6 +87,55 @@ def set_parser(*, collected, parser=None):
         for arg_details in args:
             a_subparser.add_argument(*arg_details.args, **dict(arg_details.kwargs))
     return parser
+
+
+def _make_safe_run(args):
+    no_dry_run = getattr(args, "no_dry_run", False)
+    orig_run = args.orig_run
+
+    @functools.wraps(orig_run)
+    def wrapped_run(cmdargs, **kwargs):
+        real_kwargs = dict(text=True, check=True, capture_output=True)
+        real_kwargs.update(kwargs)
+        LOGGER.info("Running: %s", cmdargs)
+        try:
+            return orig_run(cmdargs, **real_kwargs)
+        except subprocess.CalledProcessError as exc:
+            exc.add_note(f"STDERR: {exc.stderr}")
+            exc.add_note(f"STDOUT: {exc.stdout}")
+            raise
+
+    @functools.wraps(orig_run)
+    def wrapped_dry_run(cmdargs, **kwargs):
+        LOGGER.info("Running: %s", cmdargs)
+        LOGGER.info("Dry run, skipping")
+
+    unsafe_run = wrapped_run if no_dry_run else wrapped_dry_run
+    args.run = unsafe_run
+    args.safe_run = wrapped_run
+    args.orig_run = orig_run
+
+
+def run_maybe_dry(*, parser, argv=sys.argv, env=os.environ, sp_run=subprocess.run):
+    """
+    Run commands that only take ``args``.
+
+    This runs commands that take ``args``.
+    Commands can assume that the following attributes
+    exist:
+
+    * ``run``: Run with logging, only if `--no-dry-run` is passed
+    * ``safe_run``: Run with logging
+    * ``orig_run``: Original function
+    """
+    args = parser.parse_args(argv[1:])
+    args.orig_run = sp_run
+    args.env = env
+    _make_safe_run(args)
+    command = args.__gather_command__
+    return command(
+        args=args,
+    )
 
 
 def run(*, parser, argv=sys.argv, env=os.environ, sp_run=subprocess.run):

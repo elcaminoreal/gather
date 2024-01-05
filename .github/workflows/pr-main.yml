@@ -7,12 +7,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { python: "3.10", os: ubuntu-latest, check: "tests-3.10" }
-          - { python: "3.9", os: ubuntu-latest, check: "tests-3.9" }
-          - { python: "3.10", os: ubuntu-latest, check: "lint" }
-          - { python: "3.10", os: ubuntu-latest, check: "docs" }
-          - { python: "3.10", os: ubuntu-latest, check: "mypy" }
-          - { python: "3.10", os: ubuntu-latest, check: "build" }
+          - { python: "3.11", os: ubuntu-latest, check: "tests-3.11" }
+          #- { python: "3.12", os: ubuntu-latest, check: "tests-3.12" }
+          - { python: "3.11", os: ubuntu-latest, check: "lint" }
+          - { python: "3.11", os: ubuntu-latest, check: "docs" }
+          - { python: "3.11", os: ubuntu-latest, check: "mypy" }
+          - { python: "3.11", os: ubuntu-latest, check: "build" }
     name: ${{ matrix.check }} on Python ${{ matrix.python }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
 
