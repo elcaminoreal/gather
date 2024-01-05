@@ -2,6 +2,10 @@
 
 import argparse
 import io
+import pathlib
+import os
+import textwrap
+import subprocess
 import sys
 import unittest
 from unittest import mock
@@ -21,7 +25,6 @@ from gather.commands import add_argument
 COMMANDS_COLLECTOR = gather.Collector()
 
 REGISTER = commands.make_command_register(COMMANDS_COLLECTOR)
-
 
 @REGISTER(
     add_argument("--value", default="default-value"),
@@ -43,6 +46,26 @@ def _do_something_else(*, args, env, run):
     print(env["SHELL"])
     run([sys.executable, "-c", "print(3)"], check=True)
 
+MAYBE_DRY_COMMANDS_COLLECTOR = gather.Collector()
+
+MAYBE_DRY_REGISTER = commands.make_command_register(MAYBE_DRY_COMMANDS_COLLECTOR)
+
+@MAYBE_DRY_REGISTER(
+    add_argument("--no-dry-run", action="store_true", default=False),
+    add_argument("--output-dir", required=True),
+    name="write-safely",
+)
+def write_safely(args):
+    output_dir = pathlib.Path(args.output_dir)
+    safe = os.fspath(output_dir / "safe.txt")
+    unsafe = os.fspath(output_dir / "unsafe.txt")
+    code = textwrap.dedent("""\
+    import pathlib
+    import sys
+    pathlib.Path(sys.argv[1]).write_text(str(1 + 1))
+    """)
+    args.run([sys.executable, "-c", code, unsafe])
+    args.safe_run([sys.executable, "-c", code, safe])
 
 class CommandTest(unittest.TestCase):
 
@@ -102,3 +125,21 @@ class CommandTest(unittest.TestCase):
             output,
             contains_string("custom help message"),
         )
+        
+    def test_with_dry(self):
+        parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
+        with contextlib.ExitStack() as stack:
+            tmp_dir = pathlib.Path(stack.enter_context(tempfile.TemporaryDirectory()))
+            commands.run_maybe_dry(
+                parser=parser,
+                argv=["command", "write-safely", "--output-dir", os.fspath(tmp_dir)],
+                env={},
+                sp_run=subprocess.run,
+            )
+            contents = {
+                child.name: child.read_text()
+                for child in tmp_dir.iterdir()
+            }
+        raise ValueError(contents)
+
+    
