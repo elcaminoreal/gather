@@ -15,6 +15,7 @@ from .api import Wrapper, unique
 
 LOGGER = logging.getLogger(__name__)
 
+
 @attrs.frozen
 class _Argument:
     args: Sequence[Any]
@@ -87,6 +88,7 @@ def set_parser(*, collected, parser=None):
             a_subparser.add_argument(*arg_details.args, **dict(arg_details.kwargs))
     return parser
 
+
 def _make_safe_run(args):
     no_dry_run = getattr(args, "no_dry_run", False)
     orig_run = args.orig_run
@@ -115,6 +117,17 @@ def _make_safe_run(args):
 
 
 def run_maybe_dry(*, parser, argv=sys.argv, env=os.environ, sp_run=subprocess.run):
+    """
+    Run commands that only take ``args``.
+
+    This runs commands that take ``args``.
+    Commands can assume that the following attributes
+    exist:
+
+    * ``run``: Run with logging, only if `--no-dry-run` is passed
+    * ``safe_run``: Run with logging
+    * ``orig_run``: Original function
+    """
     args = parser.parse_args(argv[1:])
     args.orig_run = sp_run
     args.env = env
@@ -123,8 +136,8 @@ def run_maybe_dry(*, parser, argv=sys.argv, env=os.environ, sp_run=subprocess.ru
     return command(
         args=args,
     )
-    
-    
+
+
 def run(*, parser, argv=sys.argv, env=os.environ, sp_run=subprocess.run):
     """
     Parse arguments and run the command.
