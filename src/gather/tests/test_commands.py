@@ -138,6 +138,31 @@ class CommandTest(unittest.TestCase):
             contains_string("custom help message"),
         )
 
+class CommandMaybeDryTest(unittest.TestCase):
+
+    """Test run_maybe_dry"""
+
+    def test_error(self):
+        """Help message is printed out"""
+        parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
+        mock_output = mock.patch("sys.stdout", new=io.StringIO())
+        self.addCleanup(mock_output.stop)
+        fake_stdout = mock_output.start()
+        assert_that(
+            calling(commands.run_maybe_dry).with_args(
+                parser=parser,
+                argv=["command"],
+                env={},
+                sp_run=subprocess.run,
+            ),
+            raises(SystemExit),
+        )
+        output = fake_stdout.getvalue()
+        assert_that(
+            output,
+            contains_string("usage"),
+        )
+
     def test_with_dry(self):
         """Test running command in dry-run mode"""
         parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
@@ -203,3 +228,56 @@ class CommandTest(unittest.TestCase):
                 ),
                 raises(subprocess.CalledProcessError),
             )
+
+    def test_with_subcommand(self):
+        """Test running command as subcommand"""
+        parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
+        with contextlib.ExitStack() as stack:
+            tmp_dir = pathlib.Path(stack.enter_context(tempfile.TemporaryDirectory()))
+            commands.run_maybe_dry(
+                parser=parser,
+                argv=[
+                    "write-safely",
+                    "--output-dir",
+                    os.fspath(tmp_dir),
+                    "--no-dry-run",
+                ],
+                is_subcommand=True,
+                env={},
+                sp_run=subprocess.run,
+            )
+            contents = {child.name: child.read_text() for child in tmp_dir.iterdir()}
+        assert_that(
+            contents,
+            all_of(
+                has_entry("unsafe.txt", "2"),
+                has_entry("safe.txt", "2"),
+            ),
+        )
+
+    def test_with_prefixed_subcommand(self):
+        """Test running command as subcommand"""
+        parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
+        with contextlib.ExitStack() as stack:
+            tmp_dir = pathlib.Path(stack.enter_context(tempfile.TemporaryDirectory()))
+            commands.run_maybe_dry(
+                parser=parser,
+                argv=[
+                    "command-write-safely",
+                    "--output-dir",
+                    os.fspath(tmp_dir),
+                    "--no-dry-run",
+                ],
+                is_subcommand=True,
+                prefix="command",
+                env={},
+                sp_run=subprocess.run,
+            )
+            contents = {child.name: child.read_text() for child in tmp_dir.iterdir()}
+        assert_that(
+            contents,
+            all_of(
+                has_entry("unsafe.txt", "2"),
+                has_entry("safe.txt", "2"),
+            ),
+        )
