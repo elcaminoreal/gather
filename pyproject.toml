@@ -19,7 +19,7 @@ lint = ["flake8", "black", "pylint"]
 docs = ["sphinx"]
 
 [tool.coverage.run]
-omit = ["build/*", "*/tests/*", "*/example/*", "**/__main__.py"]
+omit = ["build/*", "*/tests/*", "*/example/*", "**/__main__.py", "**/__init__.py"]
 
 [project.license]
 text = """

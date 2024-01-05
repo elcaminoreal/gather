@@ -1,9 +1,12 @@
 """Test command dispatch"""
 
 import argparse
+import contextlib
+import functools
 import io
 import pathlib
 import os
+import tempfile
 import textwrap
 import subprocess
 import sys
@@ -11,6 +14,10 @@ import unittest
 from unittest import mock
 from hamcrest import (
     assert_that,
+    all_of,
+    has_key,
+    has_entry,
+    not_,
     string_contains_in_order,
     contains_string,
     calling,
@@ -140,6 +147,47 @@ class CommandTest(unittest.TestCase):
                 child.name: child.read_text()
                 for child in tmp_dir.iterdir()
             }
-        raise ValueError(contents)
+        assert_that(
+            contents,
+            all_of(
+                not_(has_key("unsafe.txt")),
+                has_entry("safe.txt", "2"),
+           ),
+        )
+
+    def test_with_no_dry(self):
+        parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
+        with contextlib.ExitStack() as stack:
+            tmp_dir = pathlib.Path(stack.enter_context(tempfile.TemporaryDirectory()))
+            commands.run_maybe_dry(
+                parser=parser,
+                argv=["command", "write-safely", "--output-dir", os.fspath(tmp_dir), "--no-dry-run"],
+                env={},
+                sp_run=subprocess.run,
+            )
+            contents = {
+                child.name: child.read_text()
+                for child in tmp_dir.iterdir()
+            }
+        assert_that(
+            contents,
+            all_of(
+                has_entry("unsafe.txt", "2"),
+                has_entry("safe.txt", "2"),
+           ),
+        )
+
+    def test_with_dry_fail(self):
+        parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
+        with contextlib.ExitStack() as stack:
+            tmp_dir = pathlib.Path(stack.enter_context(tempfile.TemporaryDirectory()))
+            assert_that(calling(commands.run_maybe_dry).with_args(
+                parser=parser,
+                argv=["command", "write-safely", "--output-dir", os.fspath(tmp_dir / "not-there")],
+                env={},
+                sp_run=subprocess.run,
+            ),
+                        raises(subprocess.CalledProcessError)
+                       )
 
     
