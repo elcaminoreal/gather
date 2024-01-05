@@ -11,6 +11,7 @@ description = "A gatherer"
 readme = "README.rst"
 authors = [{name = "Moshe Zadka", email = "moshez@zadka.club"}]
 dependencies = ["attrs", "incremental", "venusian"]
+requires-python = ">=3.11"
 
 [project.optional-dependencies]
 tests = ["virtue", "pyhamcrest", "coverage[toml]"]
