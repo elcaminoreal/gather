@@ -116,7 +116,15 @@ def _make_safe_run(args):
     args.orig_run = orig_run
 
 
-def run_maybe_dry(*, parser, argv=sys.argv, env=os.environ, sp_run=subprocess.run, is_subcommand=False, prefix=None):
+def run_maybe_dry(
+    *,
+    parser,
+    argv=sys.argv,
+    env=os.environ,
+    sp_run=subprocess.run,
+    is_subcommand=False,
+    prefix=None,
+):
     """
     Run commands that only take ``args``.
 
@@ -128,6 +136,7 @@ def run_maybe_dry(*, parser, argv=sys.argv, env=os.environ, sp_run=subprocess.ru
     * ``safe_run``: Run with logging
     * ``orig_run``: Original function
     """
+
     def error(args):
         parser.print_help()
         raise SystemExit(1)

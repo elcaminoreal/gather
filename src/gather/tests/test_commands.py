@@ -138,6 +138,7 @@ class CommandTest(unittest.TestCase):
             contains_string("custom help message"),
         )
 
+
 class CommandMaybeDryTest(unittest.TestCase):
 
     """Test run_maybe_dry"""
