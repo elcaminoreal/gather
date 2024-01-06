@@ -10,15 +10,20 @@ from .. import entry
 
 ENTRY_DATA = entry.EntryData.create("test_dunder_main")
 
-@ENTRY_DATA.register()
-def fake(args):
+
+@ENTRY_DATA.register(name="fake")
+def _fake(args):
     print("hello")
+
 
 class DunderMainTest(unittest.TestCase):
 
     """Test dunder_main"""
 
     def test_failed_import(self):
+        """
+        Function fails if the name is not __main__
+        """
         assert_that(
             calling(entry.dunder_main).with_args(
                 globals_dct=dict(__name__="some_name"),
@@ -29,6 +34,9 @@ class DunderMainTest(unittest.TestCase):
         )
 
     def test_run_command(self):
+        """
+        The fake command is called when the command line specifies it
+        """
         logger = logging.Logger("nonce")
         mock_output = mock.patch("sys.stdout", new=io.StringIO())
         self.addCleanup(mock_output.stop)
@@ -44,6 +52,9 @@ class DunderMainTest(unittest.TestCase):
         )
         assert_that(fake_stdout.getvalue(), contains_string("hello"))
 
-    def test_no_prefix(self):
+    def test_with_prefix(self):
+        """
+        An explicit prefix overrides the default
+        """
         ed = entry.EntryData.create("test_dunder_main", prefix="thing")
         assert_that(ed.prefix, equal_to("thing"))

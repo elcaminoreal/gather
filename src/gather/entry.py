@@ -1,15 +1,24 @@
+"""
+Abstractions for writing entrypoints
+"""
+
 from __future__ import annotations
 import functools
 import logging
 import runpy
 import sys
+from typing import Callable
 
 import attrs
 import toolz
 
 from . import commands as commandslib, api
 
+
 def dunder_main(globals_dct, command_data, logger=logging.getLogger()):
+    """
+    Call from ``__main__``
+    """
     if globals_dct["__name__"] != "__main__":
         raise ImportError("module cannot be imported", globals_dct["__name__"])
     ch = logging.StreamHandler()
@@ -24,19 +33,28 @@ def dunder_main(globals_dct, command_data, logger=logging.getLogger()):
         argv=sys.argv,
     )
 
-def _noop(_ignored): # pragma: no cover
+
+def _noop(_ignored):  # pragma: no cover
     pass
+
 
 @attrs.frozen
 class EntryData:
+    """
+    Data for the entry point.
+    """
+
     prefix: str
     collector: api.Collector
     register: Callable
     main_command: Callable[[], None]
     sub_command: Callable[[], None]
-    
+
     @classmethod
     def create(cls, package_name, prefix=None):
+        """
+        Create a new instance from package_name and prefix
+        """
         if prefix is None:
             prefix = package_name
         collector = api.Collector()
@@ -49,5 +67,13 @@ class EntryData:
                 run_name="__main__",
             ),
         )
-        sub_command = functools.partial(main_command, init_globals=dict(IS_SUBCOMMAND=True))
-        return cls(prefix=prefix, collector=collector, register=register, main_command=main_command, sub_command=sub_command)
+        sub_command = functools.partial(
+            main_command, init_globals=dict(IS_SUBCOMMAND=True)
+        )
+        return cls(
+            prefix=prefix,
+            collector=collector,
+            register=register,
+            main_command=main_command,
+            sub_command=sub_command,
+        )
