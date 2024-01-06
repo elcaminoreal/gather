@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gather"
-version = "2024.1.5.2"
+version = "2024.1.5.3"
 description = "A gatherer"
 readme = "README.rst"
 authors = [{name = "Moshe Zadka", email = "moshez@zadka.club"}]
