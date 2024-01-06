@@ -10,7 +10,7 @@ version = "2024.1.5.2"
 description = "A gatherer"
 readme = "README.rst"
 authors = [{name = "Moshe Zadka", email = "moshez@zadka.club"}]
-dependencies = ["attrs", "incremental", "venusian"]
+dependencies = ["attrs", "incremental", "venusian", "toolz"]
 requires-python = ">=3.11"
 
 [project.optional-dependencies]

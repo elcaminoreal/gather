@@ -1,4 +1,8 @@
+from __future__ import annotations
+import functools
 import logging
+import runpy
+import sys
 
 import attrs
 import toolz
@@ -17,12 +21,13 @@ def dunder_main(globals_dct, command_data, logger=logging.getLogger()):
         parser=commandslib.set_parser(collected=command_data.collector.collect()),
         is_subcommand=globals_dct.get("IS_SUBCOMMAND", False),
         prefix=command_data.prefix,
+        argv=sys.argv,
     )
     
 @attrs.frozen
-class CommandData:
+class EntryData:
     prefix: str
-    collector: gather.Collector
+    collector: api.Collector
     register: Callable
     main_command: Callable[[], None]
     sub_command: Callable[[], None]
@@ -42,4 +47,4 @@ class CommandData:
             ),
         )
         sub_command = functools.partial(main_command, init_globals=dict(IS_SUBCOMMAND=True))
-        return CommandData(prefix=prefix, collector=collector, register=register, main_command=main_command, sub_command=sub_command)
+        return cls(prefix=prefix, collector=collector, register=register, main_command=main_command, sub_command=sub_command)
