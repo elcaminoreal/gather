@@ -23,7 +23,10 @@ def dunder_main(globals_dct, command_data, logger=logging.getLogger()):
         prefix=command_data.prefix,
         argv=sys.argv,
     )
-    
+
+def _noop(_ignored): # pragma: no cover
+    pass
+
 @attrs.frozen
 class EntryData:
     prefix: str
@@ -39,7 +42,7 @@ class EntryData:
         collector = api.Collector()
         register = commandslib.make_command_register(collector)
         main_command = toolz.compose(
-            lambda _ignored: None,
+            _noop,
             functools.partial(
                 runpy.run_module,
                 package_name,

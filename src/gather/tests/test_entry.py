@@ -4,7 +4,7 @@ import logging
 import unittest
 from unittest import mock
 
-from hamcrest import assert_that, calling, contains_string, raises
+from hamcrest import assert_that, calling, contains_string, equal_to, raises
 
 from .. import entry
 
@@ -43,3 +43,7 @@ class DunderMainTest(unittest.TestCase):
             command_data=ENTRY_DATA,
         )
         assert_that(fake_stdout.getvalue(), contains_string("hello"))
+
+    def test_no_prefix(self):
+        ed = entry.EntryData.create("test_dunder_main", prefix="thing")
+        assert_that(ed.prefix, equal_to("thing"))
