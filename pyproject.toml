@@ -1,12 +1,12 @@
 [build-system]
 requires = [
-    "setuptools"
+    "setuptools", "autocalver"
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "gather"
-version = "2024.1.5.3"
+dynamic = ["version"]
 description = "A gatherer"
 readme = "README.rst"
 authors = [{name = "Moshe Zadka", email = "moshez@zadka.club"}]
@@ -47,6 +47,13 @@ Homepage = "https://github.com/elcaminoreal/gather"
 Development = "https://github.com/elcaminoreal/gather"
 Documentation = "https://gather.readthedocs.io/en/latest/"
 Blog = "https://gather.works"
+
+[tool.autocalver]
+use = true
+log = "git-log-head"
+log_command = "git log -n 1 --date=iso"
+is_main_var = "GITHUB_REF"
+is_main_match = ".*/trunk$"
 
 [project.entry-points.gather]
 gather = "gather"

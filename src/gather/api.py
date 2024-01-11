@@ -26,10 +26,8 @@ Note that while having special facilities to run functions as subcommands,
 Gather can be used to collect anything.
 """
 import collections
-import contextlib
 import importlib.metadata
 import sys
-import warnings
 
 import attr
 import venusian
