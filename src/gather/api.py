@@ -34,7 +34,7 @@ import venusian
 
 
 def _get_modules():
-    for entry_point in importlib.metadata.entry_points(name="gather"):
+    for entry_point in importlib.metadata.entry_points(group="gather"):
         module = importlib.import_module(entry_point.value)
         yield module
 
