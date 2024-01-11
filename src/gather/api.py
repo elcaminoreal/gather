@@ -26,29 +26,15 @@ Note that while having special facilities to run functions as subcommands,
 Gather can be used to collect anything.
 """
 import collections
-import contextlib
 import importlib.metadata
 import sys
-import warnings
 
 import attr
 import venusian
 
 
-@contextlib.contextmanager
-def _ignore_deprecation():
-    warnings.filterwarnings(action="ignore", category=DeprecationWarning)
-    try:
-        yield
-    finally:
-        warnings.filters.pop(0)
-
-
 def _get_modules():
-    eps = importlib.metadata.entry_points()
-    with _ignore_deprecation():
-        gather_points = eps["gather"]
-    for entry_point in gather_points:
+    for entry_point in importlib.metadata.entry_points(name="gather"):
         module = importlib.import_module(entry_point.value)
         yield module
 
@@ -137,9 +123,7 @@ class Collector(object):
         registry = collections.defaultdict(set)
         scanner = venusian.Scanner(registry=registry, tag=self)
         for module in _get_modules():
-            # Venusian is using a newly-deprecated method to scan modules
-            with _ignore_deprecation():
-                scanner.scan(module, onerror=ignore_import_error)
+            scanner.scan(module, onerror=ignore_import_error)
         return registry
 
 

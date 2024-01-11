@@ -4,47 +4,47 @@
 #
 #    pip-compile --extra=tests --output-file=requirements-tests.txt pyproject.toml
 #
-attrs==21.4.0
+attrs==23.2.0
     # via
     #   automat
     #   gather (pyproject.toml)
     #   twisted
     #   virtue
-automat==20.2.0
+automat==22.10.0
     # via twisted
-click==8.1.3
+click==8.1.7
     # via virtue
-colorama==0.4.5
+colorama==0.4.6
     # via virtue
-constantly==15.1.0
+constantly==23.10.4
     # via twisted
-coverage[toml]==6.4.1
+coverage[toml]==7.4.0
     # via gather (pyproject.toml)
 hyperlink==21.0.0
     # via twisted
-idna==3.3
+idna==3.6
     # via hyperlink
-incremental==21.3.0
+incremental==22.10.0
     # via
     #   gather (pyproject.toml)
     #   twisted
-pyhamcrest==2.0.3
+pyhamcrest==2.1.0
     # via gather (pyproject.toml)
-pyrsistent==0.18.1
+pyrsistent==0.20.0
     # via virtue
 six==1.16.0
     # via automat
 toolz==0.12.0
     # via gather (pyproject.toml)
-twisted==22.4.0
+twisted==23.10.0
     # via virtue
-typing-extensions==4.3.0
+typing-extensions==4.9.0
     # via twisted
-venusian==3.0.0
+venusian==3.1.0
     # via gather (pyproject.toml)
-virtue==2.1.1
+virtue==2023.8.2
     # via gather (pyproject.toml)
-zope-interface==5.4.0
+zope-interface==6.1
     # via twisted
 
 # The following packages are considered to be unsafe in a requirements file:
