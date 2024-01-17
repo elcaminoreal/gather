@@ -1,9 +1,8 @@
 """Run the example commands"""
+from gather import entry
+from . import ENTRY_DATA
 
-if __name__ != "__main__":
-    raise ImportError("only run")
-
-from . import main
-from gather.commands import run
-
-run(parser=main.get_parser())
+entry.dunder_main(
+    globals_dct=globals(),
+    command_data=ENTRY_DATA,
+)
