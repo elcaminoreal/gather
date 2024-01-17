@@ -10,7 +10,7 @@ dynamic = ["version"]
 description = "A gatherer"
 readme = "README.rst"
 authors = [{name = "Moshe Zadka", email = "moshez@zadka.club"}]
-dependencies = ["attrs", "incremental", "venusian", "toolz"]
+dependencies = ["attrs", "incremental", "venusian", "toolz", "commander_data"]
 requires-python = ">=3.11"
 
 [project.optional-dependencies]

@@ -10,13 +10,7 @@ commander-data==2024.1.17.82975
     # via -r -
 incremental==22.10.0
     # via -r -
-mypy==1.8.0
-    # via -r -
-mypy-extensions==1.0.0
-    # via mypy
 toolz==0.12.0
     # via -r -
-typing-extensions==4.9.0
-    # via mypy
 venusian==3.1.0
     # via -r -

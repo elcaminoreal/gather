@@ -1,17 +1,10 @@
 """Example commands"""
-import sys
 
 from commander_data.common import LOCAL_PYTHON as PYTHON
 
-import gather
-from gather import commands
 from gather.commands import add_argument
 
 from . import ENTRY_DATA
-
-def get_parser():
-    """Get parser dispatching to example commands"""
-    return commands.set_parser(collected=_COMMANDS_COLLECTOR.collect())
 
 
 @ENTRY_DATA.register(

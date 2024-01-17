@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 import argparse
-import functools
 import logging
 import os
-import subprocess
 import sys
+import subprocess
 from typing import Sequence, Any, Tuple
 
 import attrs
