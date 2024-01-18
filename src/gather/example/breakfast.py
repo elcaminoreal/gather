@@ -1,6 +1,5 @@
 """Breakfast plugins"""
 import logging
-import sys
 
 import gather
 
@@ -9,6 +8,7 @@ from . import ENTRY_DATA
 BREAKFAST = gather.Collector()
 
 LOGGER = logging.getLogger(__name__)
+
 
 @ENTRY_DATA.register()
 def breakfast(args):
