@@ -3,12 +3,15 @@ import sys
 
 import gather
 
+from . import ENTRY_DATA
+
 BREAKFAST = gather.Collector()
 
 
-def breakfast(_args):
+@ENTRY_DATA.register()
+def breakfast(args):
     """Collect breakfast plugins, make breakfast"""
-    foods = [klass() for klass in BREAKFAST.collect().values()]
+    foods = [klass() for klass in gather.unique(BREAKFAST.collect()).values()]
     for food in foods:
         food.prepare()
     for food in foods:
