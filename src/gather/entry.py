@@ -26,6 +26,7 @@ def dunder_main(globals_dct, command_data, logger=logging.getLogger()):
     formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(name)s:%(message)s")
     ch.setFormatter(formatter)
     logger.addHandler(ch)
+    logger.setLevel(logging.INFO)
     commandslib.run_maybe_dry(
         parser=commandslib.set_parser(collected=command_data.collector.collect()),
         is_subcommand=globals_dct.get("IS_SUBCOMMAND", False),
