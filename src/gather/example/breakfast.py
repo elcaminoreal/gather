@@ -1,11 +1,13 @@
 """Breakfast plugins"""
-import sys
+import logging
 
 import gather
 
 from . import ENTRY_DATA
 
 BREAKFAST = gather.Collector()
+
+LOGGER = logging.getLogger(__name__)
 
 
 @ENTRY_DATA.register()
@@ -25,11 +27,11 @@ class Eggs(object):
 
     def prepare(self):
         """Prepare eggs by scrambling"""
-        sys.stdout.write("Scrambling eggs\n")
+        LOGGER.info("Scrambling eggs")
 
     def eat(self):
         """Eat the eggs by devouring"""
-        sys.stdout.write("Devouring eggs\n")
+        LOGGER.info("Devouring eggs")
 
 
 @BREAKFAST.register()
@@ -39,11 +41,11 @@ class Cereal(object):
 
     def prepare(self):
         """Prepare cereal by mixing it with milk"""
-        sys.stdout.write("Mixing cereal and milk\n")
+        LOGGER.info("Mixing cereal and milk")
 
     def eat(self):
         """Eat cereal with a spoon"""
-        sys.stdout.write("Eating cereal with a spoon\n")
+        LOGGER.info("Eating cereal with a spoon")
 
 
 @BREAKFAST.register()
@@ -53,8 +55,8 @@ class OrangeJuice(object):
 
     def prepare(self):
         """Prepare juice by squeezing it"""
-        sys.stdout.write("Squeezing orange juice\n")
+        LOGGER.info("Squeezing orange juice")
 
     def eat(self):
         """Consume the juice by drinking it"""
-        sys.stdout.write("Drinking orange juice\n")
+        LOGGER.info("Drinking orange juice")
