@@ -18,10 +18,11 @@ def _do_something(args):
 
 
 @ENTRY_DATA.register(
-    add_argument("--no-dry-run", action="store_true"),
+    add_argument("--no-dry-run", action="store_true", default=False),
     name="do-something-else",
 )
 def _do_something_else(args):
     print(args.no_dry_run)
     print(args.env["SHELL"])
     args.safe_run(PYTHON(c="print(1+1)"), capture_output=False)
+    args.run(PYTHON(c="print(1+1+1)"), capture_output=False)
