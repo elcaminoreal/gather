@@ -15,7 +15,7 @@ In
 
     from gather import entry
     ENTRY_DATA = entry.EntryData.create(__name__)
-    
+
 In
 ``__main__.py``:
 
@@ -23,7 +23,7 @@ In
 
     from gather import entry
     from . import ENTRY_DATA
-    
+
     entry.dunder_main(
         globals_dct=globals(),
         command_data=ENTRY_DATA,
