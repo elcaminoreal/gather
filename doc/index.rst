@@ -157,3 +157,8 @@ Command dispatch
 
    .. autofunction:: run(*, parser, argv=sys.argv, env=os.environ, sp_run=subprocess.run)
 
+Script entry points
+~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: gather.entry
+   :members:
