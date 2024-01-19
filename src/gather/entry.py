@@ -1,5 +1,85 @@
 """
-Abstractions for writing entrypoints
+Abstractions for writing entrypoints.
+
+This is meant to reduce the overhead when writing a command with
+subcommands.
+
+In the example below,
+the assumption is that your code is in the package
+``awesomeawesome``.
+
+In
+``awesomeawesome/__init__.py``:
+
+.. code::
+
+    from gather import entry
+    ENTRY_DATA = entry.EntryData.create(__name__)
+    
+In
+``__main__.py``:
+
+.. code::
+
+    from gather import entry
+    from . import ENTRY_DATA
+    
+    entry.dunder_main(
+        globals_dct=globals(),
+        command_data=ENTRY_DATA,
+    )
+
+Registering a new subcommand is done by adding the following to,
+say,
+``awesomeawesome/commands.py``:
+
+.. code::
+
+    from gather.commands import add_argument
+    from . import ENTRY_DATA
+    from commander_data import COMMAND
+
+
+    @ENTRY_DATA.register()
+    def hello(args):
+        LOGGER.info("Hello world")
+
+
+    @ENTRY_DATA.register(
+        add_argument("--no-dry-run"),
+        add_argument("--a-thing", default="the-thing"),
+    )
+    def frobnicate(args):
+        args.run(
+            COMMAND.rm(recursive=None, force=None)
+        ) # Will only run with --no-dry-run
+        hello = args.safe_run(
+            COMMAND.echo("hello")
+        ).stdout.strip() # Will run regardless
+
+Note that commands can be added in any file,
+as long as they are registered properly.
+
+Optionally,
+you can add script entry points
+in
+`pyproject.toml`:
+
+.. code::
+
+    [project.scripts]
+    awesomeawesomectl = "awesomeawesome:ENTRY_DATA.main_command"
+    frobnicate = "awesome:ENTRY_DATA.sub_command"
+
+In that case,
+the following will work:
+
+* ``python -m awesomeawesome hello``
+* ``awesomeawesome hello``
+* ``python -m awesomeawesome frobnicate``
+* ``awesomeawesome frobnicate``
+* ``frobincate``
+
 """
 
 from __future__ import annotations
