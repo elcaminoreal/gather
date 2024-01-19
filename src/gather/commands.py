@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 import argparse
-import functools
-import logging
 import os
 import subprocess
 import sys
@@ -13,8 +11,6 @@ import attrs
 from commander_data.run import Runner
 
 from .api import Wrapper, unique
-
-LOGGER = logging.getLogger(__name__)
 
 
 @attrs.frozen
