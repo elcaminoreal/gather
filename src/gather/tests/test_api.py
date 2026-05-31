@@ -1,4 +1,5 @@
 """Test gather's API"""
+
 import unittest
 from typing import cast
 
@@ -72,7 +73,6 @@ def weird_name3() -> None:
 
 
 class CollectorTest(unittest.TestCase):
-
     """Tests for collecting plugins"""
 
     def test_collecting(self) -> None:

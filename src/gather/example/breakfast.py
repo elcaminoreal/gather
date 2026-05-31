@@ -1,4 +1,5 @@
 """Breakfast plugins"""
+
 import argparse
 import logging
 from typing import Callable, Iterable, Protocol, cast
@@ -38,7 +39,6 @@ def breakfast(args: argparse.Namespace) -> None:
 
 @BREAKFAST.register()
 class Eggs:
-
     """Eggs plugin for breakfast"""
 
     def prepare(self) -> None:
@@ -52,7 +52,6 @@ class Eggs:
 
 @BREAKFAST.register()
 class Cereal:
-
     """Cereal plugin for breakfast"""
 
     def prepare(self) -> None:
@@ -66,7 +65,6 @@ class Cereal:
 
 @BREAKFAST.register()
 class OrangeJuice:
-
     """OJ plugin for breakfast"""
 
     def prepare(self) -> None:

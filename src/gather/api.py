@@ -53,7 +53,6 @@ def _identity(obj: _T) -> _T:
 
 @attrs.frozen
 class Collector:
-
     """
     A plugin collector.
 
@@ -96,9 +95,7 @@ class Collector:
                 pass
         """
 
-        def callback(
-            scanner: venusian.Scanner, inner_name: str, objct: object
-        ) -> None:
+        def callback(scanner: venusian.Scanner, inner_name: str, objct: object) -> None:
             (
                 """
             Venusian_ callback, called from scan
@@ -143,8 +140,8 @@ class Collector:
             if exc_type is None or not issubclass(exc_type, ImportError):
                 raise  # pragma: no cover
 
-        registry: "collections.defaultdict[str, set[object]]" = (
-            collections.defaultdict(set)
+        registry: "collections.defaultdict[str, set[object]]" = collections.defaultdict(
+            set
         )
         scanner = venusian.Scanner(registry=registry, tag=self)
         for module in _get_modules():
@@ -174,7 +171,6 @@ def unique(mapping: Mapping[_T, Iterable[_V]]) -> dict[_T, _V]:
 
 @attrs.frozen
 class Wrapper:
-
     """Add extra data to an object"""
 
     original: object

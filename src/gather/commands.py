@@ -30,6 +30,10 @@ class ProcessRunner(Protocol):
         """
 
 
+def _default_run(*args: object, **kwargs: object) -> object:
+    return subprocess.run(*args, **kwargs)  # type: ignore[arg-type]
+
+
 @attrs.frozen
 class _Argument:
     args: Sequence[str]
@@ -138,7 +142,7 @@ def run_maybe_dry(
     parser: argparse.ArgumentParser,
     argv: Sequence[str] = sys.argv,
     env: Mapping[str, str] = os.environ,
-    sp_run: ProcessRunner = subprocess.run,
+    sp_run: ProcessRunner = _default_run,
     is_subcommand: bool = False,
     prefix: str | None = None,
 ) -> object:
@@ -195,7 +199,7 @@ def run(
     parser: argparse.ArgumentParser,
     argv: Sequence[str] = sys.argv,
     env: Mapping[str, str] = os.environ,
-    sp_run: ProcessRunner = subprocess.run,
+    sp_run: ProcessRunner = _default_run,
 ) -> object:
     """
     Parse arguments and run the command.

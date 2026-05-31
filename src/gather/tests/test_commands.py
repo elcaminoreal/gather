@@ -23,6 +23,12 @@ import gather
 from gather import commands
 from gather.commands import ProcessRunner, add_argument
 
+
+def _run(*args: object, **kwargs: object) -> object:
+    """Conforming :code:`ProcessRunner` wrapper around :code:`subprocess.run`."""
+    return subprocess.run(*args, **kwargs)  # type: ignore[arg-type]
+
+
 COMMANDS_COLLECTOR = gather.Collector()
 
 REGISTER = commands.make_command_register(COMMANDS_COLLECTOR)
@@ -67,19 +73,16 @@ def _write_safely(args: argparse.Namespace) -> None:
     output_dir = pathlib.Path(args.output_dir)
     safe = os.fspath(output_dir / "safe.txt")
     unsafe = os.fspath(output_dir / "unsafe.txt")
-    code = textwrap.dedent(
-        """\
+    code = textwrap.dedent("""\
     import pathlib
     import sys
     pathlib.Path(sys.argv[1]).write_text(str(1 + 1))
-    """
-    )
+    """)
     args.run([sys.executable, "-c", code, unsafe])
     args.safe_run([sys.executable, "-c", code, safe])
 
 
 class CommandTest(unittest.TestCase):
-
     """Test command dispatch"""
 
     def setUp(self) -> None:
@@ -142,7 +145,6 @@ class CommandTest(unittest.TestCase):
 
 
 class CommandMaybeDryTest(unittest.TestCase):
-
     """Test run_maybe_dry"""
 
     def test_error(self) -> None:
@@ -156,7 +158,7 @@ class CommandMaybeDryTest(unittest.TestCase):
                 parser=parser,
                 argv=["command"],
                 env={},
-                sp_run=subprocess.run,
+                sp_run=_run,
             )
         output = fake_stdout.getvalue()
         assert_that(
@@ -173,7 +175,7 @@ class CommandMaybeDryTest(unittest.TestCase):
                 parser=parser,
                 argv=["command", "write-safely", "--output-dir", os.fspath(tmp_dir)],
                 env={},
-                sp_run=subprocess.run,
+                sp_run=_run,
             )
             contents = {child.name: child.read_text() for child in tmp_dir.iterdir()}
         self.assertNotIn("unsafe.txt", contents)
@@ -194,7 +196,7 @@ class CommandMaybeDryTest(unittest.TestCase):
                     "--no-dry-run",
                 ],
                 env={},
-                sp_run=subprocess.run,
+                sp_run=_run,
             )
             contents = {child.name: child.read_text() for child in tmp_dir.iterdir()}
         self.assertEqual(contents["unsafe.txt"], "2")
@@ -215,7 +217,7 @@ class CommandMaybeDryTest(unittest.TestCase):
                         os.fspath(tmp_dir / "not-there"),
                     ],
                     env={},
-                    sp_run=subprocess.run,
+                    sp_run=_run,
                 )
 
     def test_with_subcommand(self) -> None:
@@ -226,7 +228,6 @@ class CommandMaybeDryTest(unittest.TestCase):
             commands.run_maybe_dry(
                 parser=parser,
                 argv=[
-                    "command",
                     "write-safely",
                     "--output-dir",
                     os.fspath(tmp_dir),
@@ -234,7 +235,7 @@ class CommandMaybeDryTest(unittest.TestCase):
                 ],
                 is_subcommand=True,
                 env={},
-                sp_run=subprocess.run,
+                sp_run=_run,
             )
             contents = {child.name: child.read_text() for child in tmp_dir.iterdir()}
         self.assertEqual(contents["unsafe.txt"], "2")
@@ -256,7 +257,7 @@ class CommandMaybeDryTest(unittest.TestCase):
                 is_subcommand=True,
                 prefix="command",
                 env={},
-                sp_run=subprocess.run,
+                sp_run=_run,
             )
             contents = {child.name: child.read_text() for child in tmp_dir.iterdir()}
         self.assertEqual(contents["unsafe.txt"], "2")

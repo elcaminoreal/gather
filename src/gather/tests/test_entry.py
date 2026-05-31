@@ -1,4 +1,5 @@
 """Test entrypoint"""
+
 import argparse
 import io
 import logging
@@ -18,7 +19,6 @@ def _fake(args: argparse.Namespace) -> None:
 
 
 class DunderMainTest(unittest.TestCase):
-
     """Test dunder_main"""
 
     def test_failed_import(self) -> None:
@@ -37,8 +37,9 @@ class DunderMainTest(unittest.TestCase):
         The fake command is called when the command line specifies it
         """
         logger = logging.Logger("nonce")
-        with mock.patch("sys.stdout", new=io.StringIO()) as fake_stdout, mock.patch(
-            "sys.argv", new=["test", "fake"]
+        with (
+            mock.patch("sys.stdout", new=io.StringIO()) as fake_stdout,
+            mock.patch("sys.argv", new=["test", "fake"]),
         ):
             entry.dunder_main(
                 globals_dct=dict(__name__="__main__"),

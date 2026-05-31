@@ -1,4 +1,5 @@
 """Wrap a plugin registration in a function"""
+
 from typing import TypeVar
 
 import gather
