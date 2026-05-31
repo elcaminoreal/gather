@@ -1,4 +1,4 @@
-"""Test command dispatch"""
+"""Test command dispatch."""
 
 import argparse
 import contextlib
@@ -24,8 +24,8 @@ from gather import commands
 from gather.commands import ProcessRunner, add_argument
 
 
+# Conforming ProcessRunner wrapper around subprocess.run.
 def _run(*args: object, **kwargs: object) -> object:
-    """Conforming :code:`ProcessRunner` wrapper around :code:`subprocess.run`."""
     return subprocess.run(*args, **kwargs)  # type: ignore[call-overload]
 
 
@@ -82,40 +82,94 @@ def _write_safely(args: argparse.Namespace) -> None:
     args.safe_run([sys.executable, "-c", code, safe])
 
 
+def _make_fake_run() -> mock.MagicMock:
+    """Build a fake process runner that echoes a minimal python ``-c`` body.
+
+    Returns:
+        A ``MagicMock`` whose side effect prints the executed snippet.
+    """
+
+    def mini_python(
+        argv: Sequence[str],
+        *positional: object,
+        check: bool = False,
+        **kwargs: object,
+    ) -> None:
+        if argv[:2] != [sys.executable, "-c"]:
+            raise ValueError("only minipython", argv)
+        details = argv[2].removeprefix("python(").removesuffix(")")
+        print(details)
+
+    return mock.MagicMock(side_effect=mini_python)
+
+
+def _read_dir(directory: pathlib.Path) -> Mapping[str, str]:
+    """Read every file in a directory into a name-to-text mapping.
+
+    Args:
+        directory: the directory to read.
+
+    Returns:
+        A mapping of file name to file contents.
+    """
+    return {child.name: child.read_text() for child in directory.iterdir()}
+
+
+def _dispatch_write_safely(
+    *,
+    leading: Sequence[str],
+    no_dry_run: bool,
+    is_subcommand: bool = False,
+    prefix: str | None = None,
+    output_subdir: str | None = None,
+) -> Mapping[str, str]:
+    """Run the ``write-safely`` command against a fresh temp directory.
+
+    Args:
+        leading: argv tokens that precede ``--output-dir``.
+        no_dry_run: whether to append ``--no-dry-run``.
+        is_subcommand: whether to dispatch as a subcommand.
+        prefix: optional subcommand prefix.
+        output_subdir: optional missing subdirectory to target (for the
+            failure case).
+
+    Returns:
+        The contents of the temp directory after the command runs.
+    """
+    parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
+    with tempfile.TemporaryDirectory() as raw:
+        tmp_dir = pathlib.Path(raw)
+        target = tmp_dir if output_subdir is None else tmp_dir / output_subdir
+        argv = [*leading, "--output-dir", os.fspath(target)]
+        if no_dry_run:
+            argv.append("--no-dry-run")
+        commands.run_maybe_dry(
+            parser=parser,
+            argv=argv,
+            env={},
+            sp_run=_run,
+            is_subcommand=is_subcommand,
+            prefix=prefix,
+        )
+        return _read_dir(tmp_dir)
+
+
 class CommandTest(unittest.TestCase):
-    """Test command dispatch"""
-
-    def setUp(self) -> None:
-        """Set up sys.stdio and a mock process runner"""
-        mock_output = mock.patch("sys.stdout", new=io.StringIO())
-        self.addCleanup(mock_output.stop)
-        self.fake_stdout = mock_output.start()
-
-        def mini_python(
-            argv: Sequence[str],
-            *args: object,
-            check: bool = False,
-            **kwargs: object,
-        ) -> None:
-            if argv[:2] != [sys.executable, "-c"]:
-                raise ValueError("only minipython", argv)
-            details = argv[2].removeprefix("python(").removesuffix(")")
-            print(details)
-
-        self.fake_run = mock.MagicMock(side_effect=mini_python)
+    """Test command dispatch."""
 
     def test_simple_command(self) -> None:
-        """Running a command dispatches to the registered function"""
+        """Running a command dispatches to the registered function."""
         parser = commands.set_parser(collected=COMMANDS_COLLECTOR.collect())
-        commands.run(
-            parser=parser,
-            argv=["command", "do-something"],
-            env=dict(SHELL="some-shell"),
-            sp_run=self.fake_run,
-        )
-        output = self.fake_stdout.getvalue()
+        stream = io.StringIO()
+        with contextlib.redirect_stdout(stream):
+            commands.run(
+                parser=parser,
+                argv=["command", "do-something"],
+                env=dict(SHELL="some-shell"),
+                sp_run=_make_fake_run(),
+            )
         assert_that(
-            output,
+            stream.getvalue(),
             string_contains_in_order(
                 "do-something",
                 "default-value",
@@ -125,140 +179,78 @@ class CommandTest(unittest.TestCase):
         )
 
     def test_custom_parser(self) -> None:
-        """Custom help message is printed out"""
+        """Custom help message is printed out."""
         parser = commands.set_parser(
             collected=COMMANDS_COLLECTOR.collect(),
             parser=argparse.ArgumentParser(
                 description="this is a custom help message",
             ),
         )
-        with self.assertRaises(SystemExit):
+        stream = io.StringIO()
+        with contextlib.redirect_stdout(stream), self.assertRaises(SystemExit):
             commands.run(
                 parser=parser,
                 argv=["command", "--help"],
             )
-        output = self.fake_stdout.getvalue()
-        assert_that(
-            output,
-            contains_string("custom help message"),
-        )
+        assert_that(stream.getvalue(), contains_string("custom help message"))
 
 
 class CommandMaybeDryTest(unittest.TestCase):
-    """Test run_maybe_dry"""
+    """Test run_maybe_dry."""
 
     def test_error(self) -> None:
-        """Help message is printed out"""
+        """Help message is printed out."""
         parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
-        mock_output = mock.patch("sys.stdout", new=io.StringIO())
-        self.addCleanup(mock_output.stop)
-        fake_stdout = mock_output.start()
-        with self.assertRaises(SystemExit):
+        stream = io.StringIO()
+        with contextlib.redirect_stdout(stream), self.assertRaises(SystemExit):
             commands.run_maybe_dry(
                 parser=parser,
                 argv=["command"],
                 env={},
                 sp_run=_run,
             )
-        output = fake_stdout.getvalue()
-        assert_that(
-            output,
-            contains_string("usage"),
-        )
+        assert_that(stream.getvalue(), contains_string("usage"))
 
     def test_with_dry(self) -> None:
-        """Test running command in dry-run mode"""
-        parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
-        with contextlib.ExitStack() as stack:
-            tmp_dir = pathlib.Path(stack.enter_context(tempfile.TemporaryDirectory()))
-            commands.run_maybe_dry(
-                parser=parser,
-                argv=["command", "write-safely", "--output-dir", os.fspath(tmp_dir)],
-                env={},
-                sp_run=_run,
-            )
-            contents = {child.name: child.read_text() for child in tmp_dir.iterdir()}
+        """A dry run writes only the safe file."""
+        contents = _dispatch_write_safely(
+            leading=["command", "write-safely"], no_dry_run=False
+        )
         self.assertNotIn("unsafe.txt", contents)
         self.assertEqual(contents["safe.txt"], "2")
 
     def test_with_no_dry(self) -> None:
-        """Test running command in no dry-run mode"""
-        parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
-        with contextlib.ExitStack() as stack:
-            tmp_dir = pathlib.Path(stack.enter_context(tempfile.TemporaryDirectory()))
-            commands.run_maybe_dry(
-                parser=parser,
-                argv=[
-                    "command",
-                    "write-safely",
-                    "--output-dir",
-                    os.fspath(tmp_dir),
-                    "--no-dry-run",
-                ],
-                env={},
-                sp_run=_run,
-            )
-            contents = {child.name: child.read_text() for child in tmp_dir.iterdir()}
+        """A no-dry run writes both files."""
+        contents = _dispatch_write_safely(
+            leading=["command", "write-safely"], no_dry_run=True
+        )
         self.assertEqual(contents["unsafe.txt"], "2")
         self.assertEqual(contents["safe.txt"], "2")
 
     def test_with_dry_fail(self) -> None:
-        """Test running command that fails"""
-        parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
-        with contextlib.ExitStack() as stack:
-            tmp_dir = pathlib.Path(stack.enter_context(tempfile.TemporaryDirectory()))
-            with self.assertRaises(subprocess.CalledProcessError):
-                commands.run_maybe_dry(
-                    parser=parser,
-                    argv=[
-                        "command",
-                        "write-safely",
-                        "--output-dir",
-                        os.fspath(tmp_dir / "not-there"),
-                    ],
-                    env={},
-                    sp_run=_run,
-                )
+        """A command targeting a missing directory raises."""
+        with self.assertRaises(subprocess.CalledProcessError):
+            _dispatch_write_safely(
+                leading=["command", "write-safely"],
+                no_dry_run=False,
+                output_subdir="not-there",
+            )
 
     def test_with_subcommand(self) -> None:
-        """Test running command as subcommand"""
-        parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
-        with contextlib.ExitStack() as stack:
-            tmp_dir = pathlib.Path(stack.enter_context(tempfile.TemporaryDirectory()))
-            commands.run_maybe_dry(
-                parser=parser,
-                argv=[
-                    "write-safely",
-                    "--output-dir",
-                    os.fspath(tmp_dir),
-                    "--no-dry-run",
-                ],
-                is_subcommand=True,
-                env={},
-                sp_run=_run,
-            )
-            contents = {child.name: child.read_text() for child in tmp_dir.iterdir()}
+        """Dispatch works when invoked as a subcommand."""
+        contents = _dispatch_write_safely(
+            leading=["write-safely"], no_dry_run=True, is_subcommand=True
+        )
         self.assertEqual(contents["unsafe.txt"], "2")
         self.assertEqual(contents["safe.txt"], "2")
 
     def test_with_prefixed_subcommand(self) -> None:
-        """Test running command as subcommand"""
-        parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
-        with contextlib.ExitStack() as stack:
-            tmp_dir = pathlib.Path(stack.enter_context(tempfile.TemporaryDirectory()))
-            commands.run_maybe_dry(
-                parser=parser,
-                argv=[
-                    "command-write-safely",
-                    "--output-dir",
-                    os.fspath(tmp_dir),
-                    "--no-dry-run",
-                ],
-                is_subcommand=True,
-                prefix="command",
-                env={},
-                sp_run=_run,
-            )
-            contents = {child.name: child.read_text() for child in tmp_dir.iterdir()}
+        """Dispatch works for a prefixed subcommand."""
+        contents = _dispatch_write_safely(
+            leading=["command-write-safely"],
+            no_dry_run=True,
+            is_subcommand=True,
+            prefix="command",
+        )
         self.assertEqual(contents["unsafe.txt"], "2")
         self.assertEqual(contents["safe.txt"], "2")

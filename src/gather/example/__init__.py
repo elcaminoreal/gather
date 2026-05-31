@@ -1,6 +1,4 @@
-"""
-Example commands and plugins
-"""
+"""Example commands and plugins."""
 
 from gather import entry
 

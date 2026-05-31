@@ -1,4 +1,4 @@
-"""Example commands"""
+"""Example commands."""
 
 import argparse
 

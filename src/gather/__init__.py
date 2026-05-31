@@ -1,4 +1,4 @@
-"""Gather: The Plugin Gatherer"""
+"""Gather: The Plugin Gatherer."""
 
 import importlib.metadata
 

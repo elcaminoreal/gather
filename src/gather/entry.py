@@ -1,5 +1,4 @@
-"""
-Abstractions for writing entrypoints.
+"""Abstractions for writing entrypoints.
 
 This is meant to reduce the overhead when writing a command with
 subcommands.
@@ -83,13 +82,13 @@ the following will work:
 """
 
 from __future__ import annotations
+import dataclasses
 import functools
 import logging
 import runpy
 import sys
 from typing import Callable, Mapping
 
-import attrs
 import toolz
 
 from . import commands as commandslib, api
@@ -100,21 +99,23 @@ def dunder_main(
     command_data: "EntryData",
     logger: logging.Logger = logging.getLogger(),
 ) -> None:
-    """
-    Call from ``__main__``
+    """Call from ``__main__``.
 
     Args:
-        globals_dct: the ``globals()`` of the calling ``__main__`` module
-        command_data: the entry data created for the package
-        logger: the logger to configure and use
+        globals_dct: the ``globals()`` of the calling ``__main__`` module.
+        command_data: the entry data created for the package.
+        logger: the logger to configure and use.
+
+    Raises:
+        ImportError: if ``globals_dct`` does not belong to ``__main__``.
     """
     if globals_dct["__name__"] != "__main__":
         raise ImportError("module cannot be imported", globals_dct["__name__"])
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.INFO)
     formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(name)s:%(message)s")
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
     logger.setLevel(logging.INFO)
     commandslib.run_maybe_dry(
         parser=commandslib.set_parser(collected=command_data.collector.collect()),
@@ -128,29 +129,36 @@ def _noop(_ignored: object) -> None:  # pragma: no cover
     pass
 
 
-@attrs.frozen
+@dataclasses.dataclass(frozen=True)
 class EntryData:
-    """
-    Data for the entry point.
+    """Data for the entry point.
+
+    Attributes:
+        prefix: the subcommand prefix.
+        collector: the collector commands are registered on.
+        register: the decorator factory used to register commands.
+        main_command: callable that runs the package as ``__main__``.
+        sub_command: callable that runs a single subcommand.
     """
 
     prefix: str
-    collector: api.Collector
-    register: commandslib.CommandRegister
+    collector: api.Collector  # noqa: SLD802
+    register: commandslib.CommandRegister  # noqa: SLD802
     main_command: Callable[[], None]
     sub_command: Callable[[], None]
 
     @classmethod
-    def create(cls, package_name: str, prefix: str | None = None) -> "EntryData":
-        """
-        Create a new instance from package_name and prefix
+    def create(  # noqa: SLD601
+        cls, package_name: str, prefix: str | None = None
+    ) -> "EntryData":
+        """Create a new instance from a package name and prefix.
 
         Args:
-            package_name: the importable name of the package
-            prefix: optional subcommand prefix (defaults to the package name)
+            package_name: the importable name of the package.
+            prefix: optional subcommand prefix (defaults to the package name).
 
         Returns:
-            A new :code:`EntryData` instance.
+            A new ``EntryData`` instance.
         """
         if prefix is None:
             prefix = package_name
