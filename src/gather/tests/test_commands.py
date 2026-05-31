@@ -26,7 +26,7 @@ from gather.commands import ProcessRunner, add_argument
 
 def _run(*args: object, **kwargs: object) -> object:
     """Conforming :code:`ProcessRunner` wrapper around :code:`subprocess.run`."""
-    return subprocess.run(*args, **kwargs)  # type: ignore[arg-type]
+    return subprocess.run(*args, **kwargs)  # type: ignore[call-overload]
 
 
 COMMANDS_COLLECTOR = gather.Collector()
