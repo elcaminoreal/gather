@@ -30,7 +30,7 @@ class ProcessRunner(Protocol):
         """
 
 
-def _default_run(*args: object, **kwargs: object) -> object:
+def _default_run(*args: object, **kwargs: object) -> object:  # pragma: no cover
     return subprocess.run(*args, **kwargs)  # type: ignore[arg-type]
 
 
