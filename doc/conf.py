@@ -12,7 +12,6 @@ extensions = [
     'sphinx.ext.napoleon',
 ]
 
-root_doc = 'index'
 project = 'Gather'
 copyright = 'Copyright (c) Moshe Zadka'
 author = 'Moshe Zadka'

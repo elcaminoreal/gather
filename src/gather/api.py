@@ -47,7 +47,14 @@ def _get_modules() -> Iterator[ModuleType]:
 
 
 def _identity(obj: _T) -> _T:
-    """Return the argument unchanged."""
+    """Return the argument unchanged.
+
+    Args:
+        obj: any object
+
+    Returns:
+        The argument, unchanged.
+    """
     return obj
 
 
@@ -115,7 +122,14 @@ class Collector:
             scanner.registry[effective_name].add(objct)
 
         def attach(func: _T) -> _T:
-            """Attach callback to be called when object is scanned"""
+            """Attach callback to be called when object is scanned
+
+            Args:
+                func: the object being registered
+
+            Returns:
+                The argument, unchanged.
+            """
             venusian.attach(func, callback, depth=self.depth)
             return func
 
@@ -135,6 +149,9 @@ class Collector:
 
             Some modules raise import errors for various reasons,
             and should be just treated as missing.
+
+            Args:
+                _unused: ignored
             """
             exc_type = sys.exc_info()[0]
             if exc_type is None or not issubclass(exc_type, ImportError):
@@ -193,7 +210,14 @@ class Wrapper:
         """
 
         def ret(original: object) -> "Wrapper":
-            """Return a :code:`Wrapper` with the original and extra"""
+            """Return a :code:`Wrapper` with the original and extra
+
+            Args:
+                original: the object to wrap
+
+            Returns:
+                A :code:`Wrapper` of original and the glued extra.
+            """
             return cls(original=original, extra=extra)
 
         return ret
