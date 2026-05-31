@@ -87,7 +87,7 @@ import functools
 import logging
 import runpy
 import sys
-from typing import Callable
+from typing import Callable, Mapping
 
 import attrs
 import toolz
@@ -95,9 +95,18 @@ import toolz
 from . import commands as commandslib, api
 
 
-def dunder_main(globals_dct, command_data, logger=logging.getLogger()):
+def dunder_main(
+    globals_dct: Mapping[str, object],
+    command_data: "EntryData",
+    logger: logging.Logger = logging.getLogger(),
+) -> None:
     """
     Call from ``__main__``
+
+    Args:
+        globals_dct: the ``globals()`` of the calling ``__main__`` module
+        command_data: the entry data created for the package
+        logger: the logger to configure and use
     """
     if globals_dct["__name__"] != "__main__":
         raise ImportError("module cannot be imported", globals_dct["__name__"])
@@ -109,13 +118,13 @@ def dunder_main(globals_dct, command_data, logger=logging.getLogger()):
     logger.setLevel(logging.INFO)
     commandslib.run_maybe_dry(
         parser=commandslib.set_parser(collected=command_data.collector.collect()),
-        is_subcommand=globals_dct.get("IS_SUBCOMMAND", False),
+        is_subcommand=bool(globals_dct.get("IS_SUBCOMMAND", False)),
         prefix=command_data.prefix,
         argv=sys.argv,
     )
 
 
-def _noop(_ignored):  # pragma: no cover
+def _noop(_ignored: object) -> None:  # pragma: no cover
     pass
 
 
@@ -127,14 +136,21 @@ class EntryData:
 
     prefix: str
     collector: api.Collector
-    register: Callable
+    register: commandslib.CommandRegister
     main_command: Callable[[], None]
     sub_command: Callable[[], None]
 
     @classmethod
-    def create(cls, package_name, prefix=None):
+    def create(cls, package_name: str, prefix: str | None = None) -> "EntryData":
         """
         Create a new instance from package_name and prefix
+
+        Args:
+            package_name: the importable name of the package
+            prefix: optional subcommand prefix (defaults to the package name)
+
+        Returns:
+            A new :code:`EntryData` instance.
         """
         if prefix is None:
             prefix = package_name

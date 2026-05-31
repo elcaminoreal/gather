@@ -5,36 +5,80 @@ import argparse
 import os
 import subprocess
 import sys
-from typing import Sequence, Any, Tuple
+from typing import Callable, Iterable, Mapping, Protocol, Sequence, TypeVar, cast
 
 import attrs
 from commander_data.run import Runner
 
-from .api import Wrapper, unique
+from .api import Collector, Wrapper, unique
+
+_F = TypeVar("_F")
+
+
+class ProcessRunner(Protocol):
+    """Something that runs a subprocess, like :code:`subprocess.run`."""
+
+    def __call__(self, *args: object, **kwargs: object) -> object:
+        """Run a subprocess.
+
+        Args:
+            args: positional arguments for the runner
+            kwargs: keyword arguments for the runner
+
+        Returns:
+            Whatever the underlying runner returns.
+        """
 
 
 @attrs.frozen
 class _Argument:
-    args: Sequence[Any]
-    kwargs: Sequence[Tuple[str, Any]]
+    args: Sequence[str]
+    kwargs: frozenset[tuple[str, object]]
 
 
-def add_argument(*args, **kwargs):
+@attrs.frozen
+class CommandRegister:
+    """A decorator factory that registers a command on a collector."""
+
+    collector: Collector
+
+    def __call__(self, *args: object, name: str | None = None) -> Callable[[_F], _F]:
+        """Return a decorator that registers its argument.
+
+        Args:
+            args: positional :func:`add_argument` descriptions
+            name: optional name to register the command as
+
+        Returns:
+            A decorator that registers and returns its argument unchanged.
+        """
+        a_transform = _transform(*args)
+        return self.collector.register(transform=a_transform, name=name)
+
+
+def add_argument(*args: str, **kwargs: object) -> _Argument:
     """
     Add argument to a registered command.
 
     See :code:`argparse.ArgumentParser.add_argument`
     for a description of the argument semantics.
+
+    Args:
+        args: positional arguments for :code:`add_argument`
+        kwargs: keyword arguments for :code:`add_argument`
+
+    Returns:
+        An opaque object describing the argument.
     """
     return _Argument(args, frozenset(kwargs.items()))
 
 
-def _transform(*args):
+def _transform(*args: object) -> Callable[[object], Wrapper]:
     glue = Wrapper.glue(args)
     return glue
 
 
-def make_command_register(collector):
+def make_command_register(collector: Collector) -> CommandRegister:
     """
     Return a decorator that registers a command.
 
@@ -46,15 +90,14 @@ def make_command_register(collector):
         and returns a decorator that registers the function
         to the collector.
     """
-
-    def _register(*args, name=None):
-        a_transform = _transform(*args)
-        return collector.register(transform=a_transform, name=name)
-
-    return _register
+    return CommandRegister(collector)
 
 
-def set_parser(*, collected, parser=None):
+def set_parser(
+    *,
+    collected: Mapping[str, Iterable[object]],
+    parser: argparse.ArgumentParser | None = None,
+) -> argparse.ArgumentParser:
     """
     Set (or create) a parser.
 
@@ -74,27 +117,31 @@ def set_parser(*, collected, parser=None):
     subparsers = parser.add_subparsers()
     commands = unique(collected)
     for name, details in commands.items():
-        original = details.original
-        args = details.extra
+        a_wrapper = cast(Wrapper, details)
+        original = a_wrapper.original
+        args = cast("Sequence[_Argument]", a_wrapper.extra)
         a_subparser = subparsers.add_parser(name)
         a_subparser.set_defaults(
             __gather_name__=name,
             __gather_command__=original,
         )
         for arg_details in args:
-            a_subparser.add_argument(*arg_details.args, **dict(arg_details.kwargs))
+            a_subparser.add_argument(
+                *arg_details.args,
+                **dict(arg_details.kwargs),  # type: ignore[arg-type]
+            )
     return parser
 
 
 def run_maybe_dry(
     *,
-    parser,
-    argv=sys.argv,
-    env=os.environ,
-    sp_run=subprocess.run,
-    is_subcommand=False,
-    prefix=None,
-):
+    parser: argparse.ArgumentParser,
+    argv: Sequence[str] = sys.argv,
+    env: Mapping[str, str] = os.environ,
+    sp_run: ProcessRunner = subprocess.run,
+    is_subcommand: bool = False,
+    prefix: str | None = None,
+) -> object:
     """
     Run commands that only take ``args``.
 
@@ -105,20 +152,31 @@ def run_maybe_dry(
     * ``run``: Run with logging, only if `--no-dry-run` is passed
     * ``safe_run``: Run with logging
     * ``orig_run``: Original function
+
+    Args:
+        parser: an argument parser
+        argv: sys.argv or something that looks like it
+        env: os.environ or something that looks like it
+        sp_run: subprocess.run or something that looks like it
+        is_subcommand: whether this is dispatched as a subcommand
+        prefix: optional subcommand prefix to strip
+
+    Returns:
+        Return value from dispatched command
     """
 
-    def error(args):
+    def error(args: argparse.Namespace) -> object:
         parser.print_help()
         raise SystemExit(1)
 
-    argv = list(argv)
+    argv_list = list(argv)
     if is_subcommand:
-        argv[0:0] = [prefix or "base-command"]
-        argv[1] = argv[1].rsplit("/", 1)[-1]
+        argv_list[0:0] = [prefix or "base-command"]
+        argv_list[1] = argv_list[1].rsplit("/", 1)[-1]
         if prefix is not None:
-            argv[1] = argv[1].removeprefix(prefix + "-")
+            argv_list[1] = argv_list[1].removeprefix(prefix + "-")
 
-    args = parser.parse_args(argv[1:])
+    args = parser.parse_args(argv_list[1:])
     args.orig_run = sp_run
     args.env = env
     a_runner = Runner.from_args(args)
@@ -132,13 +190,20 @@ def run_maybe_dry(
     )
 
 
-def run(*, parser, argv=sys.argv, env=os.environ, sp_run=subprocess.run):
+def run(
+    *,
+    parser: argparse.ArgumentParser,
+    argv: Sequence[str] = sys.argv,
+    env: Mapping[str, str] = os.environ,
+    sp_run: ProcessRunner = subprocess.run,
+) -> object:
     """
     Parse arguments and run the command.
 
     Pass non-default args in testing scenarios.
 
     Args:
+        parser: an argument parser
         argv: sys.argv or something that looks like it
         env: os.environ or something that looks like it
         sp_run: subprocess.run or something that looks like it
@@ -146,7 +211,7 @@ def run(*, parser, argv=sys.argv, env=os.environ, sp_run=subprocess.run):
     Returns:
         Return value from dispatched command
     """
-    args = parser.parse_args(argv[1:])
+    args = parser.parse_args(list(argv)[1:])
     command = args.__gather_command__
     return command(
         args=args,

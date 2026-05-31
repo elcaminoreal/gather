@@ -1,19 +1,35 @@
 """Breakfast plugins"""
+import argparse
 import logging
+from typing import Callable, Iterable, Protocol, cast
 
-import gather
+from gather import Collector, unique
 
 from . import ENTRY_DATA
 
-BREAKFAST = gather.Collector()
+BREAKFAST = Collector()
 
 LOGGER = logging.getLogger(__name__)
 
 
+class Food(Protocol):
+    """Something that can be prepared and eaten."""
+
+    def prepare(self) -> None:
+        """Prepare the food."""
+
+    def eat(self) -> None:
+        """Eat the food."""
+
+
 @ENTRY_DATA.register()
-def breakfast(args):
+def breakfast(args: argparse.Namespace) -> None:
     """Collect breakfast plugins, make breakfast"""
-    foods = [klass() for klass in gather.unique(BREAKFAST.collect()).values()]
+    classes = cast(
+        "Iterable[Callable[[], Food]]",
+        unique(BREAKFAST.collect()).values(),
+    )
+    foods = [klass() for klass in classes]
     for food in foods:
         food.prepare()
     for food in foods:
@@ -21,42 +37,42 @@ def breakfast(args):
 
 
 @BREAKFAST.register()
-class Eggs(object):
+class Eggs:
 
     """Eggs plugin for breakfast"""
 
-    def prepare(self):
+    def prepare(self) -> None:
         """Prepare eggs by scrambling"""
         LOGGER.info("Scrambling eggs")
 
-    def eat(self):
+    def eat(self) -> None:
         """Eat the eggs by devouring"""
         LOGGER.info("Devouring eggs")
 
 
 @BREAKFAST.register()
-class Cereal(object):
+class Cereal:
 
     """Cereal plugin for breakfast"""
 
-    def prepare(self):
+    def prepare(self) -> None:
         """Prepare cereal by mixing it with milk"""
         LOGGER.info("Mixing cereal and milk")
 
-    def eat(self):
+    def eat(self) -> None:
         """Eat cereal with a spoon"""
         LOGGER.info("Eating cereal with a spoon")
 
 
 @BREAKFAST.register()
-class OrangeJuice(object):
+class OrangeJuice:
 
     """OJ plugin for breakfast"""
 
-    def prepare(self):
+    def prepare(self) -> None:
         """Prepare juice by squeezing it"""
         LOGGER.info("Squeezing orange juice")
 
-    def eat(self):
+    def eat(self) -> None:
         """Consume the juice by drinking it"""
         LOGGER.info("Drinking orange juice")

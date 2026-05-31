@@ -10,24 +10,18 @@ import textwrap
 import subprocess
 import sys
 import unittest
-from typing import Callable, Mapping, Sequence
+from typing import Mapping, Sequence
 from unittest import mock
 from hamcrest import (
     assert_that,
-    all_of,
-    has_key,
-    has_entry,
-    not_,
     string_contains_in_order,
     contains_string,
-    calling,
-    raises,
 )
 
 
 import gather
 from gather import commands
-from gather.commands import add_argument
+from gather.commands import ProcessRunner, add_argument
 
 COMMANDS_COLLECTOR = gather.Collector()
 
@@ -39,7 +33,7 @@ REGISTER = commands.make_command_register(COMMANDS_COLLECTOR)
     name="do-something",
 )
 def _do_something(
-    *, args: argparse.Namespace, env: Mapping[str, str], run: Callable[..., object]
+    *, args: argparse.Namespace, env: Mapping[str, str], run: ProcessRunner
 ) -> None:
     print(args.__gather_name__)
     print(args.value)
@@ -52,7 +46,7 @@ def _do_something(
     name="do-something-else",
 )
 def _do_something_else(
-    *, args: argparse.Namespace, env: Mapping[str, str], run: Callable[..., object]
+    *, args: argparse.Namespace, env: Mapping[str, str], run: ProcessRunner
 ) -> None:
     print(args.no_dry_run)
     print(env["SHELL"])
@@ -135,13 +129,11 @@ class CommandTest(unittest.TestCase):
                 description="this is a custom help message",
             ),
         )
-        assert_that(
-            calling(commands.run).with_args(
+        with self.assertRaises(SystemExit):
+            commands.run(
                 parser=parser,
                 argv=["command", "--help"],
-            ),
-            raises(SystemExit),
-        )
+            )
         output = self.fake_stdout.getvalue()
         assert_that(
             output,
@@ -159,15 +151,13 @@ class CommandMaybeDryTest(unittest.TestCase):
         mock_output = mock.patch("sys.stdout", new=io.StringIO())
         self.addCleanup(mock_output.stop)
         fake_stdout = mock_output.start()
-        assert_that(
-            calling(commands.run_maybe_dry).with_args(
+        with self.assertRaises(SystemExit):
+            commands.run_maybe_dry(
                 parser=parser,
                 argv=["command"],
                 env={},
                 sp_run=subprocess.run,
-            ),
-            raises(SystemExit),
-        )
+            )
         output = fake_stdout.getvalue()
         assert_that(
             output,
@@ -186,13 +176,8 @@ class CommandMaybeDryTest(unittest.TestCase):
                 sp_run=subprocess.run,
             )
             contents = {child.name: child.read_text() for child in tmp_dir.iterdir()}
-        assert_that(
-            contents,
-            all_of(
-                not_(has_key("unsafe.txt")),
-                has_entry("safe.txt", "2"),
-            ),
-        )
+        self.assertNotIn("unsafe.txt", contents)
+        self.assertEqual(contents["safe.txt"], "2")
 
     def test_with_no_dry(self) -> None:
         """Test running command in no dry-run mode"""
@@ -212,21 +197,16 @@ class CommandMaybeDryTest(unittest.TestCase):
                 sp_run=subprocess.run,
             )
             contents = {child.name: child.read_text() for child in tmp_dir.iterdir()}
-        assert_that(
-            contents,
-            all_of(
-                has_entry("unsafe.txt", "2"),
-                has_entry("safe.txt", "2"),
-            ),
-        )
+        self.assertEqual(contents["unsafe.txt"], "2")
+        self.assertEqual(contents["safe.txt"], "2")
 
     def test_with_dry_fail(self) -> None:
         """Test running command that fails"""
         parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
         with contextlib.ExitStack() as stack:
             tmp_dir = pathlib.Path(stack.enter_context(tempfile.TemporaryDirectory()))
-            assert_that(
-                calling(commands.run_maybe_dry).with_args(
+            with self.assertRaises(subprocess.CalledProcessError):
+                commands.run_maybe_dry(
                     parser=parser,
                     argv=[
                         "command",
@@ -236,9 +216,7 @@ class CommandMaybeDryTest(unittest.TestCase):
                     ],
                     env={},
                     sp_run=subprocess.run,
-                ),
-                raises(subprocess.CalledProcessError),
-            )
+                )
 
     def test_with_subcommand(self) -> None:
         """Test running command as subcommand"""
@@ -248,6 +226,7 @@ class CommandMaybeDryTest(unittest.TestCase):
             commands.run_maybe_dry(
                 parser=parser,
                 argv=[
+                    "command",
                     "write-safely",
                     "--output-dir",
                     os.fspath(tmp_dir),
@@ -258,13 +237,8 @@ class CommandMaybeDryTest(unittest.TestCase):
                 sp_run=subprocess.run,
             )
             contents = {child.name: child.read_text() for child in tmp_dir.iterdir()}
-        assert_that(
-            contents,
-            all_of(
-                has_entry("unsafe.txt", "2"),
-                has_entry("safe.txt", "2"),
-            ),
-        )
+        self.assertEqual(contents["unsafe.txt"], "2")
+        self.assertEqual(contents["safe.txt"], "2")
 
     def test_with_prefixed_subcommand(self) -> None:
         """Test running command as subcommand"""
@@ -285,10 +259,5 @@ class CommandMaybeDryTest(unittest.TestCase):
                 sp_run=subprocess.run,
             )
             contents = {child.name: child.read_text() for child in tmp_dir.iterdir()}
-        assert_that(
-            contents,
-            all_of(
-                has_entry("unsafe.txt", "2"),
-                has_entry("safe.txt", "2"),
-            ),
-        )
+        self.assertEqual(contents["unsafe.txt"], "2")
+        self.assertEqual(contents["safe.txt"], "2")

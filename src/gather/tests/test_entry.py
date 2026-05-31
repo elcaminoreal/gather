@@ -5,7 +5,7 @@ import logging
 import unittest
 from unittest import mock
 
-from hamcrest import assert_that, calling, contains_string, equal_to, raises
+from hamcrest import assert_that, contains_string, equal_to
 
 from .. import entry
 
@@ -25,32 +25,26 @@ class DunderMainTest(unittest.TestCase):
         """
         Function fails if the name is not __main__
         """
-        assert_that(
-            calling(entry.dunder_main).with_args(
+        with self.assertRaises(ImportError):
+            entry.dunder_main(
                 globals_dct=dict(__name__="some_name"),
-                command_data=None,
-                logger=None,
-            ),
-            raises(ImportError),
-        )
+                command_data=ENTRY_DATA,
+                logger=logging.Logger("nonce"),
+            )
 
     def test_run_command(self) -> None:
         """
         The fake command is called when the command line specifies it
         """
         logger = logging.Logger("nonce")
-        mock_output = mock.patch("sys.stdout", new=io.StringIO())
-        self.addCleanup(mock_output.stop)
-        fake_stdout = mock_output.start()
-        mock_args = mock.patch("sys.argv", new=[])
-        self.addCleanup(mock_args.stop)
-        fake_args = mock_args.start()
-        fake_args[:] = ["test", "fake"]
-        entry.dunder_main(
-            globals_dct=dict(__name__="__main__"),
-            logger=logger,
-            command_data=ENTRY_DATA,
-        )
+        with mock.patch("sys.stdout", new=io.StringIO()) as fake_stdout, mock.patch(
+            "sys.argv", new=["test", "fake"]
+        ):
+            entry.dunder_main(
+                globals_dct=dict(__name__="__main__"),
+                logger=logger,
+                command_data=ENTRY_DATA,
+            )
         assert_that(fake_stdout.getvalue(), contains_string("hello"))
 
     def test_with_prefix(self) -> None:
