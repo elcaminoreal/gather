@@ -198,6 +198,15 @@ class CommandTest(unittest.TestCase):
 class CommandMaybeDryTest(unittest.TestCase):
     """Test run_maybe_dry."""
 
+    def _assert_both_written(self, contents: Mapping[str, str]) -> None:
+        """Assert both the safe and unsafe files hold ``"2"``.
+
+        Args:
+            contents: the directory contents produced by a command.
+        """
+        self.assertEqual(contents["unsafe.txt"], "2")
+        self.assertEqual(contents["safe.txt"], "2")
+
     def test_error(self) -> None:
         """Help message is printed out."""
         parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
@@ -224,8 +233,7 @@ class CommandMaybeDryTest(unittest.TestCase):
         contents = _dispatch_write_safely(
             leading=["command", "write-safely"], no_dry_run=True
         )
-        self.assertEqual(contents["unsafe.txt"], "2")
-        self.assertEqual(contents["safe.txt"], "2")
+        self._assert_both_written(contents)
 
     def test_with_dry_fail(self) -> None:
         """A command targeting a missing directory raises."""
@@ -241,8 +249,7 @@ class CommandMaybeDryTest(unittest.TestCase):
         contents = _dispatch_write_safely(
             leading=["write-safely"], no_dry_run=True, is_subcommand=True
         )
-        self.assertEqual(contents["unsafe.txt"], "2")
-        self.assertEqual(contents["safe.txt"], "2")
+        self._assert_both_written(contents)
 
     def test_with_prefixed_subcommand(self) -> None:
         """Dispatch works for a prefixed subcommand."""
@@ -252,5 +259,4 @@ class CommandMaybeDryTest(unittest.TestCase):
             is_subcommand=True,
             prefix="command",
         )
-        self.assertEqual(contents["unsafe.txt"], "2")
-        self.assertEqual(contents["safe.txt"], "2")
+        self._assert_both_written(contents)

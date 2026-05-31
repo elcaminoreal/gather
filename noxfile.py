@@ -113,6 +113,11 @@ def lint(session):
         "stolid",
         "--max-line-length=88",
         "--ignore=E203,E503,W503",
+        # SLD801 (duplicated structure) is inherent to table-style test
+        # fixtures and to the parallel example plugins -- and venusian only
+        # collects top-level decorated definitions, so they cannot be folded
+        # into loops. Keep the rule strict for the library itself.
+        "--per-file-ignores=src/gather/tests/*:SLD801 src/gather/example/*:SLD801",
         "--style=google",
         "--skip-checking-short-docstrings=False",
         "--arg-type-hints-in-docstring=False",

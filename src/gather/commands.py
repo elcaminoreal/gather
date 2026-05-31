@@ -182,14 +182,17 @@ def run_maybe_dry(  # noqa: SLD602,SLD609
         Return value from the dispatched command.
     """
 
-    def error(namespace: argparse.Namespace) -> object:
+    def error(*, args: argparse.Namespace) -> object:
         """Print help and exit when no command was selected.
 
         Args:
-            namespace: the parsed arguments (unused).
+            args: the parsed arguments (unused).
 
         Returns:
             Never returns; raises ``SystemExit``.
+
+        Raises:
+            SystemExit: always, after printing help.
         """
         parser.print_help()
         raise SystemExit(1)
