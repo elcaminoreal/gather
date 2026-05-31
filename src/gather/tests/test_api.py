@@ -91,12 +91,12 @@ def weird_name1() -> None:
 
 
 @COLLIDING_COMMANDS.register(name="weird_name")
-def weird_name2() -> None:
+def weird_name2() -> None:  # noqa: SLD801
     """Register one of several commands for the same name."""
 
 
 @COLLIDING_COMMANDS.register(name="weird_name")
-def weird_name3() -> None:
+def weird_name3() -> None:  # noqa: SLD801
     """Register one of several commands for the same name."""
 
 

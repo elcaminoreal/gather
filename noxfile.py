@@ -113,19 +113,6 @@ def lint(session):
         "stolid",
         "--max-line-length=88",
         "--ignore=E203,E503,W503",
-        # Scope a few house-style rules off the test suite and the example
-        # demo package -- neither is the shipped library. Tests legitimately
-        # repeat table-style fixtures (SLD801), keep small private helpers
-        # with docstrings (SLD823) and TestCase methods (SLD302/SLD303), and
-        # a parametrized dispatch helper (SLD601/SLD602/SLD609). The example
-        # plugins are deliberately parallel (SLD801). venusian only collects
-        # top-level decorated definitions, so these cannot be folded into
-        # loops. The rules stay strict for src/gather itself.
-        (
-            "--per-file-ignores="
-            "*/tests/*:SLD801,SLD823,SLD302,SLD303,SLD601,SLD602,SLD609 "
-            "*/example/*:SLD801"
-        ),
         "--style=google",
         "--skip-checking-short-docstrings=False",
         "--arg-type-hints-in-docstring=False",

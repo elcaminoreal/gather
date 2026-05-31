@@ -11,7 +11,6 @@ import subprocess
 import sys
 import unittest
 from typing import Mapping, Sequence
-from unittest import mock
 from hamcrest import (
     assert_that,
     string_contains_in_order,
@@ -25,7 +24,7 @@ from gather.commands import ProcessRunner, add_argument
 
 
 # Conforming ProcessRunner wrapper around subprocess.run.
-def _run(*args: object, **kwargs: object) -> object:
+def _run(*args: object, **kwargs: object) -> object:  # noqa: SLD801
     return subprocess.run(*args, **kwargs)  # type: ignore[call-overload]
 
 
@@ -44,7 +43,7 @@ def _do_something(
     print(args.__gather_name__)
     print(args.value)
     print(env["SHELL"])
-    run([sys.executable, "-c", "print(2)"], check=True)
+    run([sys.executable, "-c", "print(2)"], check=True)  # noqa: SLD801
 
 
 @REGISTER(
@@ -56,7 +55,7 @@ def _do_something_else(
 ) -> None:
     print(args.no_dry_run)
     print(env["SHELL"])
-    run([sys.executable, "-c", "print(3)"], check=True)
+    run([sys.executable, "-c", "print(3)"], check=True)  # noqa: SLD801
 
 
 MAYBE_DRY_COMMANDS_COLLECTOR = gather.Collector()
@@ -82,25 +81,22 @@ def _write_safely(args: argparse.Namespace) -> None:
     args.safe_run([sys.executable, "-c", code, safe])
 
 
-def _make_fake_run() -> mock.MagicMock:
+def _make_fake_run() -> "commands.ProcessRunner":
     """Build a fake process runner that echoes a minimal python ``-c`` body.
 
     Returns:
-        A ``MagicMock`` whose side effect prints the executed snippet.
+        A runner whose effect prints the executed snippet.
     """
 
-    def mini_python(
-        argv: Sequence[str],
-        *positional: object,
-        check: bool = False,
-        **kwargs: object,
-    ) -> None:
+    def fake_run(*args: object, check: bool = False, **kwargs: object) -> object:
+        argv = args[0]
+        assert isinstance(argv, list)
         if argv[:2] != [sys.executable, "-c"]:
             raise ValueError("only minipython", argv)
-        details = argv[2].removeprefix("python(").removesuffix(")")
-        print(details)
+        print(str(argv[2]).removeprefix("python(").removesuffix(")"))
+        return None
 
-    return mock.MagicMock(side_effect=mini_python)
+    return fake_run
 
 
 def _read_dir(directory: pathlib.Path) -> Mapping[str, str]:
@@ -192,7 +188,9 @@ class CommandTest(unittest.TestCase):
                 parser=parser,
                 argv=["command", "--help"],
             )
-        assert_that(stream.getvalue(), contains_string("custom help message"))
+        assert_that(  # noqa: SLD801
+            stream.getvalue(), contains_string("custom help message")
+        )  # noqa: SLD801
 
 
 class CommandMaybeDryTest(unittest.TestCase):
@@ -204,8 +202,8 @@ class CommandMaybeDryTest(unittest.TestCase):
         Args:
             contents: the directory contents produced by a command.
         """
-        self.assertEqual(contents["unsafe.txt"], "2")
-        self.assertEqual(contents["safe.txt"], "2")
+        self.assertEqual(contents["unsafe.txt"], "2")  # noqa: SLD801
+        self.assertEqual(contents["safe.txt"], "2")  # noqa: SLD801
 
     def test_error(self) -> None:
         """Help message is printed out."""
@@ -218,7 +216,7 @@ class CommandMaybeDryTest(unittest.TestCase):
                 env={},
                 sp_run=_run,
             )
-        assert_that(stream.getvalue(), contains_string("usage"))
+        assert_that(stream.getvalue(), contains_string("usage"))  # noqa: SLD801
 
     def test_with_dry(self) -> None:
         """A dry run writes only the safe file."""
@@ -226,7 +224,7 @@ class CommandMaybeDryTest(unittest.TestCase):
             leading=["command", "write-safely"], no_dry_run=False
         )
         self.assertNotIn("unsafe.txt", contents)
-        self.assertEqual(contents["safe.txt"], "2")
+        self.assertEqual(contents["safe.txt"], "2")  # noqa: SLD801
 
     def test_with_no_dry(self) -> None:
         """A no-dry run writes both files."""

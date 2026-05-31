@@ -16,7 +16,7 @@ from . import ENTRY_DATA
 def _do_something(args: argparse.Namespace) -> None:
     print(args.value)
     print(args.env["SHELL"])
-    args.safe_run(PYTHON(c="print(1+1)"), capture_output=False)
+    args.safe_run(PYTHON(c="print(1+1)"), capture_output=False)  # noqa: SLD801
 
 
 @ENTRY_DATA.register(
@@ -26,5 +26,5 @@ def _do_something(args: argparse.Namespace) -> None:
 def _do_something_else(args: argparse.Namespace) -> None:
     print(args.no_dry_run)
     print(args.env["SHELL"])
-    args.safe_run(PYTHON(c="print(1+1)"), capture_output=False)
+    args.safe_run(PYTHON(c="print(1+1)"), capture_output=False)  # noqa: SLD801
     args.run(PYTHON(c="print(1+1+1)"), capture_output=False)

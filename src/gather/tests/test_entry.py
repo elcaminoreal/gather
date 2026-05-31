@@ -63,7 +63,7 @@ class DunderMainTest(unittest.TestCase):
                 logger=logger,
                 command_data=ENTRY_DATA,
             )
-        assert_that(stream.getvalue(), contains_string("hello"))
+        assert_that(stream.getvalue(), contains_string("hello"))  # noqa: SLD801
 
     def test_with_prefix(self) -> None:
         """An explicit prefix overrides the default."""

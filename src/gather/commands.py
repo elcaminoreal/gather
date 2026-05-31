@@ -30,7 +30,9 @@ class ProcessRunner(Protocol):
         """
 
 
-def _default_run(*args: object, **kwargs: object) -> object:  # pragma: no cover
+def _default_run(  # noqa: SLD801 # pragma: no cover
+    *args: object, **kwargs: object
+) -> object:
     return subprocess.run(*args, **kwargs)  # type: ignore[call-overload]
 
 
