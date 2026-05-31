@@ -20,19 +20,10 @@ def _fake(args: argparse.Namespace) -> None:
     print("hello")
 
 
+# Temporarily replace the process-global sys.argv (which dunder_main reads),
+# restoring it on exit.
 @contextlib.contextmanager
 def _temporary_argv(argv: Sequence[str]) -> Iterator[None]:
-    """Temporarily replace ``sys.argv``.
-
-    ``dunder_main`` reads the process-global ``sys.argv``, so the entry path
-    can only be exercised by swapping it out and restoring it afterwards.
-
-    Args:
-        argv: the argv to install for the duration of the context.
-
-    Yields:
-        Nothing; ``sys.argv`` is restored on exit.
-    """
     original = sys.argv
     sys.argv = list(argv)
     try:

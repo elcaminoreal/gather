@@ -28,6 +28,17 @@ def _run(*args: object, **kwargs: object) -> object:  # noqa: SLD801
     return subprocess.run(*args, **kwargs)  # type: ignore[call-overload]
 
 
+# Conforming ProcessRunner that echoes a minimal python ``-c`` body instead of
+# spawning a process, so command dispatch can be observed via captured stdout.
+def _fake_process(*args: object, **kwargs: object) -> object:
+    argv = args[0]
+    assert isinstance(argv, list)
+    if argv[:2] != [sys.executable, "-c"]:
+        raise ValueError("only minipython", argv)
+    print(str(argv[2]).removeprefix("python(").removesuffix(")"))
+    return None
+
+
 COMMANDS_COLLECTOR = gather.Collector()
 
 REGISTER = commands.make_command_register(COMMANDS_COLLECTOR)
@@ -81,57 +92,27 @@ def _write_safely(args: argparse.Namespace) -> None:
     args.safe_run([sys.executable, "-c", code, safe])
 
 
-def _make_fake_run() -> "commands.ProcessRunner":
-    """Build a fake process runner that echoes a minimal python ``-c`` body.
-
-    Returns:
-        A runner whose effect prints the executed snippet.
-    """
-
-    def fake_run(*args: object, check: bool = False, **kwargs: object) -> object:
-        argv = args[0]
-        assert isinstance(argv, list)
-        if argv[:2] != [sys.executable, "-c"]:
-            raise ValueError("only minipython", argv)
-        print(str(argv[2]).removeprefix("python(").removesuffix(")"))
-        return None
-
-    return fake_run
-
-
+# Read every file in a directory into a name-to-text mapping.
 def _read_dir(directory: pathlib.Path) -> Mapping[str, str]:
-    """Read every file in a directory into a name-to-text mapping.
-
-    Args:
-        directory: the directory to read.
-
-    Returns:
-        A mapping of file name to file contents.
-    """
     return {child.name: child.read_text() for child in directory.iterdir()}
 
 
-def _dispatch_write_safely(
+# Assert both the safe and unsafe files were written with "2".
+def _assert_both_written(case: unittest.TestCase, contents: Mapping[str, str]) -> None:
+    case.assertEqual(contents["unsafe.txt"], "2")  # noqa: SLD801
+    case.assertEqual(contents["safe.txt"], "2")  # noqa: SLD801
+
+
+# Run the ``write-safely`` command against a fresh temp directory and return its
+# contents. ``leading`` are the argv tokens before ``--output-dir``.
+def _dispatch_write_safely(  # noqa: SLD601,SLD602
     *,
     leading: Sequence[str],
-    no_dry_run: bool,
+    no_dry_run: bool,  # noqa: SLD609
     is_subcommand: bool = False,
     prefix: str | None = None,
     output_subdir: str | None = None,
 ) -> Mapping[str, str]:
-    """Run the ``write-safely`` command against a fresh temp directory.
-
-    Args:
-        leading: argv tokens that precede ``--output-dir``.
-        no_dry_run: whether to append ``--no-dry-run``.
-        is_subcommand: whether to dispatch as a subcommand.
-        prefix: optional subcommand prefix.
-        output_subdir: optional missing subdirectory to target (for the
-            failure case).
-
-    Returns:
-        The contents of the temp directory after the command runs.
-    """
     parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
     with tempfile.TemporaryDirectory() as raw:
         tmp_dir = pathlib.Path(raw)
@@ -162,7 +143,7 @@ class CommandTest(unittest.TestCase):
                 parser=parser,
                 argv=["command", "do-something"],
                 env=dict(SHELL="some-shell"),
-                sp_run=_make_fake_run(),
+                sp_run=_fake_process,
             )
         assert_that(
             stream.getvalue(),
@@ -196,15 +177,6 @@ class CommandTest(unittest.TestCase):
 class CommandMaybeDryTest(unittest.TestCase):
     """Test run_maybe_dry."""
 
-    def _assert_both_written(self, contents: Mapping[str, str]) -> None:
-        """Assert both the safe and unsafe files hold ``"2"``.
-
-        Args:
-            contents: the directory contents produced by a command.
-        """
-        self.assertEqual(contents["unsafe.txt"], "2")  # noqa: SLD801
-        self.assertEqual(contents["safe.txt"], "2")  # noqa: SLD801
-
     def test_error(self) -> None:
         """Help message is printed out."""
         parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
@@ -231,7 +203,7 @@ class CommandMaybeDryTest(unittest.TestCase):
         contents = _dispatch_write_safely(
             leading=["command", "write-safely"], no_dry_run=True
         )
-        self._assert_both_written(contents)
+        _assert_both_written(self, contents)
 
     def test_with_dry_fail(self) -> None:
         """A command targeting a missing directory raises."""
@@ -247,7 +219,7 @@ class CommandMaybeDryTest(unittest.TestCase):
         contents = _dispatch_write_safely(
             leading=["write-safely"], no_dry_run=True, is_subcommand=True
         )
-        self._assert_both_written(contents)
+        _assert_both_written(self, contents)
 
     def test_with_prefixed_subcommand(self) -> None:
         """Dispatch works for a prefixed subcommand."""
@@ -257,4 +229,4 @@ class CommandMaybeDryTest(unittest.TestCase):
             is_subcommand=True,
             prefix="command",
         )
-        self._assert_both_written(contents)
+        _assert_both_written(self, contents)
