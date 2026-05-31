@@ -129,7 +129,7 @@ def _noop(_ignored: object) -> None:  # pragma: no cover
     pass
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class EntryData:
     """Data for the entry point.
 

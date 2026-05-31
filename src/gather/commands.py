@@ -34,13 +34,13 @@ def _default_run(*args: object, **kwargs: object) -> object:  # pragma: no cover
     return subprocess.run(*args, **kwargs)  # type: ignore[call-overload]
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class _Argument:
     args: Sequence[str]
     kwargs: frozenset[tuple[str, object]]
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class CommandRegister:
     """A decorator factory that registers a command on a collector.
 
@@ -77,7 +77,7 @@ def add_argument(*args: str, **kwargs: object) -> _Argument:
     Returns:
         An opaque object describing the argument.
     """
-    return _Argument(args, frozenset(kwargs.items()))
+    return _Argument(args=args, kwargs=frozenset(kwargs.items()))
 
 
 def _transform(*args: object) -> Callable[[object], Wrapper]:
@@ -94,11 +94,11 @@ def make_command_register(collector: Collector) -> CommandRegister:  # noqa: SLD
         A callable that expects positional ``add_argument`` arguments and
         returns a decorator that registers the function to the collector.
     """
-    return CommandRegister(collector)
+    return CommandRegister(collector=collector)
 
 
 def _add_subparser(
-    subparsers: argparse._SubParsersAction[argparse.ArgumentParser],
+    subparsers: "argparse._SubParsersAction[argparse.ArgumentParser]",  # noqa: SLD905
     name: str,
     wrapped: object,
 ) -> None:
@@ -142,7 +142,7 @@ def set_parser(
     return parser
 
 
-def _normalize_argv(
+def _normalize_argv(  # noqa: SLD609
     argv: Sequence[str], is_subcommand: bool, prefix: str | None
 ) -> list[str]:
     argv_list = list(argv)
@@ -155,7 +155,7 @@ def _normalize_argv(
     return argv_list
 
 
-def run_maybe_dry(  # noqa: SLD602,SLD609
+def run_maybe_dry(  # noqa: SLD601,SLD602,SLD609
     *,
     parser: argparse.ArgumentParser,
     argv: Sequence[str] = sys.argv,

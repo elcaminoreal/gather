@@ -43,7 +43,7 @@ def breakfast(args: argparse.Namespace) -> None:
 
 
 @BREAKFAST.register()
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class Eggs:
     """Eggs plugin for breakfast."""
 
@@ -57,7 +57,7 @@ class Eggs:
 
 
 @BREAKFAST.register()
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class Cereal:
     """Cereal plugin for breakfast."""
 
@@ -71,7 +71,7 @@ class Cereal:
 
 
 @BREAKFAST.register()
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class OrangeJuice:
     """OJ plugin for breakfast."""
 

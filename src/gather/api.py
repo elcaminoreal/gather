@@ -49,7 +49,7 @@ def _ignore_import_error(_unused: object) -> None:
         raise  # pragma: no cover
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class Collector:
     """A plugin collector.
 
@@ -64,7 +64,7 @@ class Collector:
     name: str | None = None
     depth: int = 1
 
-    def register(  # noqa: SLD303
+    def register(  # noqa: SLD303,SLD601
         self,
         name: str | None = None,
         transform: Callable[[object], object] = _identity,
@@ -138,15 +138,14 @@ class Collector:
 def unique(mapping: Mapping[_Key, Iterable[_Value]]) -> Mapping[_Key, _Value]:
     """Transform a map-to-iterables into a map-to-single-items.
 
+    A ``ValueError`` propagates from the sequence unpacking if any of the
+    values is not an iterable with exactly one item.
+
     Args:
         mapping: a mapping of keys to iterables of exactly one item.
 
     Returns:
         A mapping of keys to the single value.
-
-    Raises:
-        ValueError: if any of the values is not an iterable with exactly
-            one item.
     """
     ret: dict[_Key, _Value] = {}
     for key, value_set in mapping.items():
@@ -155,7 +154,7 @@ def unique(mapping: Mapping[_Key, Iterable[_Value]]) -> Mapping[_Key, _Value]:
     return ret
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class Wrapper:
     """Add extra data to an object.
 
