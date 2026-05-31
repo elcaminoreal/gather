@@ -25,22 +25,34 @@ i.e., what users are expected to :code:`import` at the top-level.
 Note that while having special facilities to run functions as subcommands,
 Gather can be used to collect anything.
 """
+
 import collections
+import importlib
 import importlib.metadata
 import sys
+from types import ModuleType
+from typing import Callable, Iterable, Iterator, Mapping, TypeVar
 
-import attr
+import attrs
 import venusian
 
+_T = TypeVar("_T")
+_V = TypeVar("_V")
 
-def _get_modules():
+
+def _get_modules() -> Iterator[ModuleType]:
     for entry_point in importlib.metadata.entry_points(group="gather"):
         module = importlib.import_module(entry_point.value)
         yield module
 
 
-@attr.s(frozen=True)
-class Collector(object):
+def _identity(obj: _T) -> _T:
+    """Return the argument unchanged."""
+    return obj
+
+
+@attrs.frozen
+class Collector:
 
     """
     A plugin collector.
@@ -49,11 +61,15 @@ class Collector(object):
     and *collect*-ing them when they need to be used.
     """
 
-    name = attr.ib(default=None)
+    name: str | None = None
 
-    depth = attr.ib(default=1)
+    depth: int = 1
 
-    def register(self, name=None, transform=lambda x: x):
+    def register(
+        self,
+        name: str | None = None,
+        transform: Callable[[object], object] = _identity,
+    ) -> Callable[[_T], _T]:
         """
         Register a class or function
 
@@ -63,6 +79,9 @@ class Collector(object):
             transform (callable): optional. A one-argument function. Will be called,
                           and the return value used in collection.
                           Default is identity function
+
+        Returns:
+            A decorator that attaches the registration to its argument.
 
         This is meant to be used as a decoator:
 
@@ -77,7 +96,9 @@ class Collector(object):
                 pass
         """
 
-        def callback(scanner, inner_name, objct):
+        def callback(
+            scanner: venusian.Scanner, inner_name: str, objct: object
+        ) -> None:
             (
                 """
             Venusian_ callback, called from scan
@@ -96,38 +117,42 @@ class Collector(object):
             objct = transform(objct)
             scanner.registry[effective_name].add(objct)
 
-        def attach(func):
+        def attach(func: _T) -> _T:
             """Attach callback to be called when object is scanned"""
             venusian.attach(func, callback, depth=self.depth)
             return func
 
         return attach
 
-    def collect(self):
+    def collect(self) -> "collections.defaultdict[str, set[object]]":
         """
         Collect all registered functions or classes.
 
-        Returns a dictionary mapping names to registered elements.
+        Returns:
+            A dictionary mapping names to registered elements.
         """
 
-        def ignore_import_error(_unused):
+        def ignore_import_error(_unused: object) -> None:
             """
             Ignore ImportError during collection.
 
             Some modules raise import errors for various reasons,
             and should be just treated as missing.
             """
-            if not issubclass(sys.exc_info()[0], ImportError):
+            exc_type = sys.exc_info()[0]
+            if exc_type is None or not issubclass(exc_type, ImportError):
                 raise  # pragma: no cover
 
-        registry = collections.defaultdict(set)
+        registry: "collections.defaultdict[str, set[object]]" = (
+            collections.defaultdict(set)
+        )
         scanner = venusian.Scanner(registry=registry, tag=self)
         for module in _get_modules():
             scanner.scan(module, onerror=ignore_import_error)
         return registry
 
 
-def unique(mapping):
+def unique(mapping: Mapping[_T, Iterable[_V]]) -> dict[_T, _V]:
     """
     Transform map to sets to map to single items.
 
@@ -140,24 +165,24 @@ def unique(mapping):
     Returns:
         A mapping of keys to the single value
     """
-    ret = {}
+    ret: dict[_T, _V] = {}
     for key, value_set in mapping.items():
         [value] = value_set
         ret[key] = value
     return ret
 
 
-@attr.s(frozen=True)
-class Wrapper(object):
+@attrs.frozen
+class Wrapper:
 
     """Add extra data to an object"""
 
-    original = attr.ib()
+    original: object
 
-    extra = attr.ib()
+    extra: object
 
     @classmethod
-    def glue(cls, extra):
+    def glue(cls, extra: object) -> Callable[[object], "Wrapper"]:
         """
         Glue extra data to an object
 
@@ -171,7 +196,7 @@ class Wrapper(object):
         of a :code:`register` call.
         """
 
-        def ret(original):
+        def ret(original: object) -> "Wrapper":
             """Return a :code:`Wrapper` with the original and extra"""
             return cls(original=original, extra=extra)
 

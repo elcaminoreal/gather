@@ -10,6 +10,7 @@ import textwrap
 import subprocess
 import sys
 import unittest
+from typing import Callable, Mapping, Sequence
 from unittest import mock
 from hamcrest import (
     assert_that,
@@ -37,7 +38,9 @@ REGISTER = commands.make_command_register(COMMANDS_COLLECTOR)
     add_argument("--value", default="default-value"),
     name="do-something",
 )
-def _do_something(*, args, env, run):
+def _do_something(
+    *, args: argparse.Namespace, env: Mapping[str, str], run: Callable[..., object]
+) -> None:
     print(args.__gather_name__)
     print(args.value)
     print(env["SHELL"])
@@ -48,7 +51,9 @@ def _do_something(*, args, env, run):
     add_argument("--no-dry-run", action="store_true"),
     name="do-something-else",
 )
-def _do_something_else(*, args, env, run):
+def _do_something_else(
+    *, args: argparse.Namespace, env: Mapping[str, str], run: Callable[..., object]
+) -> None:
     print(args.no_dry_run)
     print(env["SHELL"])
     run([sys.executable, "-c", "print(3)"], check=True)
@@ -64,7 +69,7 @@ MAYBE_DRY_REGISTER = commands.make_command_register(MAYBE_DRY_COMMANDS_COLLECTOR
     add_argument("--output-dir", required=True),
     name="write-safely",
 )
-def _write_safely(args):
+def _write_safely(args: argparse.Namespace) -> None:
     output_dir = pathlib.Path(args.output_dir)
     safe = os.fspath(output_dir / "safe.txt")
     unsafe = os.fspath(output_dir / "unsafe.txt")
@@ -83,13 +88,18 @@ class CommandTest(unittest.TestCase):
 
     """Test command dispatch"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up sys.stdio and a mock process runner"""
         mock_output = mock.patch("sys.stdout", new=io.StringIO())
         self.addCleanup(mock_output.stop)
         self.fake_stdout = mock_output.start()
 
-        def mini_python(argv, *args, check=False, **kwargs):
+        def mini_python(
+            argv: Sequence[str],
+            *args: object,
+            check: bool = False,
+            **kwargs: object,
+        ) -> None:
             if argv[:2] != [sys.executable, "-c"]:
                 raise ValueError("only minipython", argv)
             details = argv[2].removeprefix("python(").removesuffix(")")
@@ -97,7 +107,7 @@ class CommandTest(unittest.TestCase):
 
         self.fake_run = mock.MagicMock(side_effect=mini_python)
 
-    def test_simple_command(self):
+    def test_simple_command(self) -> None:
         """Running a command dispatches to the registered function"""
         parser = commands.set_parser(collected=COMMANDS_COLLECTOR.collect())
         commands.run(
@@ -117,7 +127,7 @@ class CommandTest(unittest.TestCase):
             ),
         )
 
-    def test_custom_parser(self):
+    def test_custom_parser(self) -> None:
         """Custom help message is printed out"""
         parser = commands.set_parser(
             collected=COMMANDS_COLLECTOR.collect(),
@@ -143,7 +153,7 @@ class CommandMaybeDryTest(unittest.TestCase):
 
     """Test run_maybe_dry"""
 
-    def test_error(self):
+    def test_error(self) -> None:
         """Help message is printed out"""
         parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
         mock_output = mock.patch("sys.stdout", new=io.StringIO())
@@ -164,7 +174,7 @@ class CommandMaybeDryTest(unittest.TestCase):
             contains_string("usage"),
         )
 
-    def test_with_dry(self):
+    def test_with_dry(self) -> None:
         """Test running command in dry-run mode"""
         parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
         with contextlib.ExitStack() as stack:
@@ -184,7 +194,7 @@ class CommandMaybeDryTest(unittest.TestCase):
             ),
         )
 
-    def test_with_no_dry(self):
+    def test_with_no_dry(self) -> None:
         """Test running command in no dry-run mode"""
         parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
         with contextlib.ExitStack() as stack:
@@ -210,7 +220,7 @@ class CommandMaybeDryTest(unittest.TestCase):
             ),
         )
 
-    def test_with_dry_fail(self):
+    def test_with_dry_fail(self) -> None:
         """Test running command that fails"""
         parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
         with contextlib.ExitStack() as stack:
@@ -230,7 +240,7 @@ class CommandMaybeDryTest(unittest.TestCase):
                 raises(subprocess.CalledProcessError),
             )
 
-    def test_with_subcommand(self):
+    def test_with_subcommand(self) -> None:
         """Test running command as subcommand"""
         parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
         with contextlib.ExitStack() as stack:
@@ -256,7 +266,7 @@ class CommandMaybeDryTest(unittest.TestCase):
             ),
         )
 
-    def test_with_prefixed_subcommand(self):
+    def test_with_prefixed_subcommand(self) -> None:
         """Test running command as subcommand"""
         parser = commands.set_parser(collected=MAYBE_DRY_COMMANDS_COLLECTOR.collect())
         with contextlib.ExitStack() as stack:

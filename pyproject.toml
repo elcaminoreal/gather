@@ -10,17 +10,21 @@ dynamic = ["version"]
 description = "A gatherer"
 readme = "README.rst"
 authors = [{name = "Moshe Zadka", email = "moshez@zadka.club"}]
-dependencies = ["attrs", "incremental", "venusian", "toolz", "commander_data"]
-requires-python = ">=3.11"
+dependencies = ["attrs", "venusian", "toolz", "commander_data"]
+requires-python = ">=3.12"
 
 [project.optional-dependencies]
 tests = ["virtue", "pyhamcrest", "coverage[toml]"]
 mypy = ["mypy"]
-lint = ["flake8", "black", "pylint"]
+lint = ["flake8", "black", "stolid", "placard", "pydoclint"]
 docs = ["sphinx"]
 
 [tool.coverage.run]
 omit = ["build/*", "*/tests/*", "*/example/*", "**/__main__.py", "**/__init__.py"]
+
+[[tool.mypy.overrides]]
+module = ["venusian", "toolz", "commander_data.*"]
+ignore_missing_imports = true
 
 [project.license]
 text = """

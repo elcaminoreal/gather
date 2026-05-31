@@ -1,4 +1,5 @@
 """Test entrypoint"""
+import argparse
 import io
 import logging
 import unittest
@@ -12,7 +13,7 @@ ENTRY_DATA = entry.EntryData.create("test_dunder_main")
 
 
 @ENTRY_DATA.register(name="fake")
-def _fake(args):
+def _fake(args: argparse.Namespace) -> None:
     print("hello")
 
 
@@ -20,7 +21,7 @@ class DunderMainTest(unittest.TestCase):
 
     """Test dunder_main"""
 
-    def test_failed_import(self):
+    def test_failed_import(self) -> None:
         """
         Function fails if the name is not __main__
         """
@@ -33,7 +34,7 @@ class DunderMainTest(unittest.TestCase):
             raises(ImportError),
         )
 
-    def test_run_command(self):
+    def test_run_command(self) -> None:
         """
         The fake command is called when the command line specifies it
         """
@@ -52,7 +53,7 @@ class DunderMainTest(unittest.TestCase):
         )
         assert_that(fake_stdout.getvalue(), contains_string("hello"))
 
-    def test_with_prefix(self):
+    def test_with_prefix(self) -> None:
         """
         An explicit prefix overrides the default
         """
