@@ -1,4 +1,4 @@
-"""Gather -- Collect all your plugins
+"""Gather -- Collect all your plugins.
 
 Gather allows a way to register plugins.
 It features the ability to register the plugins from any module,
@@ -6,67 +6,72 @@ in any package, in any distribution.
 A given module can register plugins of multiple types.
 
 In order to have anything registered from a package,
-it needs to declare that it supports :code:`gather`
+it needs to declare that it supports ``gather``
 in its package metadata.
-
-For example,
-with
-:code:`pyproject.toml`:
-
-.. code::
-
-    [project.entry-points.gather]
-    ignored = "<ROOT_PACKAGE>"
-
-
-The :code:`ROOT_PACKAGE` should point to the Python name of the package:
-i.e., what users are expected to :code:`import` at the top-level.
+For example, with ``pyproject.toml`` an entry point named ``gather``
+should point ``<ROOT_PACKAGE>`` at the Python name of the package --
+what users are expected to ``import`` at the top level.
 
 Note that while having special facilities to run functions as subcommands,
 Gather can be used to collect anything.
 """
+
 import collections
+import dataclasses
+import importlib
 import importlib.metadata
 import sys
+from types import ModuleType
+from typing import Callable, Iterable, Iterator, Mapping, TypeVar
 
-import attr
 import venusian
 
+_Key = TypeVar("_Key")
+_Value = TypeVar("_Value")
+_Element = TypeVar("_Element")
 
-def _get_modules():
+
+def _get_modules() -> Iterator[ModuleType]:
     for entry_point in importlib.metadata.entry_points(group="gather"):
         module = importlib.import_module(entry_point.value)
         yield module
 
 
-@attr.s(frozen=True)
-class Collector(object):
+# Identity transform: returns its argument unchanged.
+def _identity(obj: _Element) -> _Element:
+    return obj
 
-    """
-    A plugin collector.
+
+def _ignore_import_error(_unused: object) -> None:
+    # venusian onerror callback: swallow ImportError, re-raise anything else.
+    exc_type = sys.exc_info()[0]
+    if exc_type is None or not issubclass(exc_type, ImportError):
+        raise  # pragma: no cover
+
+
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
+class Collector:
+    """A plugin collector.
 
     A collector allows to *register* functions or classes by modules,
     and *collect*-ing them when they need to be used.
+
+    Attributes:
+        name: an optional name for the collector.
+        depth: the venusian scan depth used when attaching registrations.
     """
 
-    name = attr.ib(default=None)
+    name: str | None = None
+    depth: int = 1
 
-    depth = attr.ib(default=1)
+    def register(  # noqa: SLD303,SLD601
+        self,
+        name: str | None = None,
+        transform: Callable[[object], object] = _identity,
+    ) -> Callable[[_Element], _Element]:
+        """Register a class or function.
 
-    def register(self, name=None, transform=lambda x: x):
-        """
-        Register a class or function
-
-        Args:
-            name (str): optional. Name to register the class or function as.
-                        (default is name of object)
-            transform (callable): optional. A one-argument function. Will be called,
-                          and the return value used in collection.
-                          Default is identity function
-
-        This is meant to be used as a decoator:
-
-        .. code::
+        This is meant to be used as a decorator::
 
             @COLLECTOR.register()
             def specific_subcommand(args):
@@ -75,104 +80,115 @@ class Collector(object):
             @COLLECTOR.register(name='another_specific_name')
             def main(args):
                 pass
+
+        Args:
+            name: optional name to register the object as
+                (defaults to the name of the object).
+            transform: optional one-argument function whose return value is
+                used in collection (defaults to the identity function).
+
+        Returns:
+            A decorator that attaches the registration to its argument.
         """
 
-        def callback(scanner, inner_name, objct):
-            (
-                """
-            Venusian_ callback, called from scan
+        def callback(scanner: venusian.Scanner, inner_name: str, objct: object) -> None:
+            """Attach the registration when venusian scans the object.
 
-            .. _Venusian: http://docs.pylonsproject.org/projects/"""
-                """venusian/en/latest/api.html#venusian.attach
+            Args:
+                scanner: the venusian scanner driving the scan.
+                inner_name: the name the object was defined as.
+                objct: the object being registered.
             """
-            )
-            tag = getattr(scanner, "tag", None)
-            if tag is not self:
+            if getattr(scanner, "tag", None) is not self:
                 return
-            if name is None:
-                effective_name = inner_name
-            else:
-                effective_name = name
-            objct = transform(objct)
-            scanner.registry[effective_name].add(objct)
+            effective_name = inner_name if name is None else name
+            scanner.registry[effective_name].add(transform(objct))
 
-        def attach(func):
-            """Attach callback to be called when object is scanned"""
+        def attach(func: _Element) -> _Element:
+            """Attach the callback to be called when the object is scanned.
+
+            Args:
+                func: the object being registered.
+
+            Returns:
+                The argument, unchanged.
+            """
             venusian.attach(func, callback, depth=self.depth)
             return func
 
         return attach
 
-    def collect(self):
+    def collect(  # noqa: SLD303
+        self,
+    ) -> Mapping[str, "set[object]"]:
+        """Collect all registered functions or classes.
+
+        Returns:
+            A mapping of names to sets of registered elements.
         """
-        Collect all registered functions or classes.
-
-        Returns a dictionary mapping names to registered elements.
-        """
-
-        def ignore_import_error(_unused):
-            """
-            Ignore ImportError during collection.
-
-            Some modules raise import errors for various reasons,
-            and should be just treated as missing.
-            """
-            if not issubclass(sys.exc_info()[0], ImportError):
-                raise  # pragma: no cover
-
-        registry = collections.defaultdict(set)
+        registry: "collections.defaultdict[str, set[object]]" = collections.defaultdict(
+            set
+        )
         scanner = venusian.Scanner(registry=registry, tag=self)
         for module in _get_modules():
-            scanner.scan(module, onerror=ignore_import_error)
+            scanner.scan(module, onerror=_ignore_import_error)
         return registry
 
 
-def unique(mapping):
-    """
-    Transform map to sets to map to single items.
+def unique(mapping: Mapping[_Key, Iterable[_Value]]) -> Mapping[_Key, _Value]:
+    """Transform a map-to-iterables into a map-to-single-items.
 
-    Raises a :code:`ValueError` if any of the values is not an iterable
-    with exactly one item.
+    A ``ValueError`` propagates from the sequence unpacking if any of the
+    values is not an iterable with exactly one item.
 
     Args:
-        mapping: A mapping of keys to Iterables of 1
+        mapping: a mapping of keys to iterables of exactly one item.
 
     Returns:
-        A mapping of keys to the single value
+        A mapping of keys to the single value.
     """
-    ret = {}
+    ret: dict[_Key, _Value] = {}
     for key, value_set in mapping.items():
         [value] = value_set
         ret[key] = value
     return ret
 
 
-@attr.s(frozen=True)
-class Wrapper(object):
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
+class Wrapper:
+    """Add extra data to an object.
 
-    """Add extra data to an object"""
+    Attributes:
+        original: the wrapped object.
+        extra: the extra data glued to the object.
+    """
 
-    original = attr.ib()
-
-    extra = attr.ib()
+    original: object
+    extra: object
 
     @classmethod
-    def glue(cls, extra):
-        """
-        Glue extra data to an object
+    def glue(cls, extra: object) -> Callable[[object], "Wrapper"]:
+        """Glue extra data to an object.
+
+        This method is useful mainly as the ``transform`` parameter
+        of a ``register`` call.
 
         Args:
-            extra: what to add
+            extra: what to add.
 
         Returns:
-            callable: function of one argument that returns a :code:`Wrapped`
-
-        This method is useful mainly as the :code:`transform` parameter
-        of a :code:`register` call.
+            A function of one argument that returns a ``Wrapper``.
         """
 
-        def ret(original):
-            """Return a :code:`Wrapper` with the original and extra"""
+        def ret(original: object) -> "Wrapper":
+            """Return a ``Wrapper`` with the original and extra.
+
+            Args:
+                original: the object to wrap.
+
+            Returns:
+                A ``Wrapper`` of original and the glued extra.
+            """
             return cls(original=original, extra=extra)
 
         return ret

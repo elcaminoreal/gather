@@ -1,62 +1,84 @@
-"""Breakfast plugins"""
-import logging
+"""Breakfast plugins."""
 
-import gather
+import argparse
+import dataclasses
+import logging
+from typing import Callable, Iterable, Protocol, cast
+
+from gather import Collector, unique
 
 from . import ENTRY_DATA
 
-BREAKFAST = gather.Collector()
+BREAKFAST = Collector()
 
 LOGGER = logging.getLogger(__name__)
 
 
+class Food(Protocol):
+    """Something that can be prepared and eaten."""
+
+    def prepare(self) -> None:
+        """Prepare the food."""
+
+    def eat(self) -> None:
+        """Eat the food."""
+
+
 @ENTRY_DATA.register()
-def breakfast(args):
-    """Collect breakfast plugins, make breakfast"""
-    foods = [klass() for klass in gather.unique(BREAKFAST.collect()).values()]
-    for food in foods:
-        food.prepare()
-    for food in foods:
-        food.eat()
+def breakfast(args: argparse.Namespace) -> None:
+    """Collect breakfast plugins and make breakfast.
+
+    Args:
+        args: the parsed command-line arguments (unused).
+    """
+    classes = cast(  # noqa: SLD203
+        "Iterable[Callable[[], Food]]",
+        unique(BREAKFAST.collect()).values(),
+    )
+    foods = [klass() for klass in classes]
+    for item in foods:
+        item.prepare()
+    for item in foods:
+        item.eat()
 
 
 @BREAKFAST.register()
-class Eggs(object):
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
+class Eggs:  # noqa: SLD801
+    """Eggs plugin for breakfast."""
 
-    """Eggs plugin for breakfast"""
-
-    def prepare(self):
-        """Prepare eggs by scrambling"""
+    def prepare(self) -> None:  # noqa: SLD303
+        """Prepare eggs by scrambling."""
         LOGGER.info("Scrambling eggs")
 
-    def eat(self):
-        """Eat the eggs by devouring"""
+    def eat(self) -> None:  # noqa: SLD303
+        """Eat the eggs by devouring."""
         LOGGER.info("Devouring eggs")
 
 
 @BREAKFAST.register()
-class Cereal(object):
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
+class Cereal:  # noqa: SLD801
+    """Cereal plugin for breakfast."""
 
-    """Cereal plugin for breakfast"""
-
-    def prepare(self):
-        """Prepare cereal by mixing it with milk"""
+    def prepare(self) -> None:  # noqa: SLD303
+        """Prepare cereal by mixing it with milk."""
         LOGGER.info("Mixing cereal and milk")
 
-    def eat(self):
-        """Eat cereal with a spoon"""
+    def eat(self) -> None:  # noqa: SLD303
+        """Eat cereal with a spoon."""
         LOGGER.info("Eating cereal with a spoon")
 
 
 @BREAKFAST.register()
-class OrangeJuice(object):
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
+class OrangeJuice:  # noqa: SLD801
+    """OJ plugin for breakfast."""
 
-    """OJ plugin for breakfast"""
-
-    def prepare(self):
-        """Prepare juice by squeezing it"""
+    def prepare(self) -> None:  # noqa: SLD303
+        """Prepare juice by squeezing it."""
         LOGGER.info("Squeezing orange juice")
 
-    def eat(self):
-        """Consume the juice by drinking it"""
+    def eat(self) -> None:  # noqa: SLD303
+        """Consume the juice by drinking it."""
         LOGGER.info("Drinking orange juice")

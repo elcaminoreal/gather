@@ -1,4 +1,6 @@
-"""Example commands"""
+"""Example commands."""
+
+import argparse
 
 from commander_data.common import LOCAL_PYTHON as PYTHON
 
@@ -11,18 +13,18 @@ from . import ENTRY_DATA
     add_argument("--value"),
     name="do-something",
 )
-def _do_something(args):
+def _do_something(args: argparse.Namespace) -> None:
     print(args.value)
     print(args.env["SHELL"])
-    args.safe_run(PYTHON(c="print(1+1)"), capture_output=False)
+    args.safe_run(PYTHON(c="print(1+1)"), capture_output=False)  # noqa: SLD801
 
 
 @ENTRY_DATA.register(
     add_argument("--no-dry-run", action="store_true", default=False),
     name="do-something-else",
 )
-def _do_something_else(args):
+def _do_something_else(args: argparse.Namespace) -> None:
     print(args.no_dry_run)
     print(args.env["SHELL"])
-    args.safe_run(PYTHON(c="print(1+1)"), capture_output=False)
+    args.safe_run(PYTHON(c="print(1+1)"), capture_output=False)  # noqa: SLD801
     args.run(PYTHON(c="print(1+1+1)"), capture_output=False)
