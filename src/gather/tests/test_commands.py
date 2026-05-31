@@ -14,7 +14,6 @@ from typing import Mapping, Sequence
 from hamcrest import (
     assert_that,
     string_contains_in_order,
-    contains_string,
 )
 
 
@@ -22,10 +21,17 @@ import gather
 from gather import commands
 from gather.commands import ProcessRunner, add_argument
 
+from ._assertions import assert_stdout_contains
+
 
 # Conforming ProcessRunner wrapper around subprocess.run.
 def _run(*args: object, **kwargs: object) -> object:  # noqa: SLD801
     return subprocess.run(*args, **kwargs)  # type: ignore[call-overload]
+
+
+# Run a one-line python snippet through a registered command's injected runner.
+def _run_python(run: ProcessRunner, body: str) -> None:
+    run([sys.executable, "-c", body], check=True)
 
 
 # Conforming ProcessRunner that echoes a minimal python ``-c`` body instead of
@@ -54,7 +60,7 @@ def _do_something(
     print(args.__gather_name__)
     print(args.value)
     print(env["SHELL"])
-    run([sys.executable, "-c", "print(2)"], check=True)  # noqa: SLD801
+    _run_python(run, "print(2)")
 
 
 @REGISTER(
@@ -66,7 +72,7 @@ def _do_something_else(
 ) -> None:
     print(args.no_dry_run)
     print(env["SHELL"])
-    run([sys.executable, "-c", "print(3)"], check=True)  # noqa: SLD801
+    _run_python(run, "print(3)")
 
 
 MAYBE_DRY_COMMANDS_COLLECTOR = gather.Collector()
@@ -169,9 +175,7 @@ class CommandTest(unittest.TestCase):
                 parser=parser,
                 argv=["command", "--help"],
             )
-        assert_that(  # noqa: SLD801
-            stream.getvalue(), contains_string("custom help message")
-        )  # noqa: SLD801
+        assert_stdout_contains(stream, "custom help message")
 
 
 class CommandMaybeDryTest(unittest.TestCase):
@@ -188,7 +192,7 @@ class CommandMaybeDryTest(unittest.TestCase):
                 env={},
                 sp_run=_run,
             )
-        assert_that(stream.getvalue(), contains_string("usage"))  # noqa: SLD801
+        assert_stdout_contains(stream, "usage")
 
     def test_with_dry(self) -> None:
         """A dry run writes only the safe file."""

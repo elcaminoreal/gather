@@ -8,9 +8,10 @@ import sys
 import unittest
 from typing import Iterator, Sequence
 
-from hamcrest import assert_that, contains_string, equal_to
+from hamcrest import assert_that, equal_to
 
 from .. import entry
+from ._assertions import assert_stdout_contains
 
 ENTRY_DATA = entry.EntryData.create("test_dunder_main")
 
@@ -54,7 +55,7 @@ class DunderMainTest(unittest.TestCase):
                 logger=logger,
                 command_data=ENTRY_DATA,
             )
-        assert_that(stream.getvalue(), contains_string("hello"))  # noqa: SLD801
+        assert_stdout_contains(stream, "hello")
 
     def test_with_prefix(self) -> None:
         """An explicit prefix overrides the default."""
