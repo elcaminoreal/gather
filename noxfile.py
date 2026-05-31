@@ -16,7 +16,7 @@ PUBLISH_ACTION = "pypa/gh-action-pypi-publish"
 # against the pinned action at runtime (_verify_publish_python) so it cannot
 # silently drift. The dry_release row in pr-main.yml must use this version
 # too, or nox's --python filter fails the job.
-PUBLISH_PYTHON = "3.13"
+PUBLISH_PYTHON = "3.11"
 
 
 def _publish_action_sha():
