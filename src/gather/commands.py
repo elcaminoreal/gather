@@ -144,9 +144,9 @@ def set_parser(
     return parser
 
 
-def _normalize_argv(  # noqa: SLD609
+def _normalize_argv(
     argv: Sequence[str],
-    is_subcommand: bool,
+    is_subcommand: bool,  # noqa: SLD609
     prefix: str | None,
 ) -> list[str]:
     argv_list = list(argv)

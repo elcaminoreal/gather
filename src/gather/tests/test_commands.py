@@ -31,11 +31,11 @@ def _run(*args: object, **kwargs: object) -> object:  # noqa: SLD801
 # Conforming ProcessRunner that echoes a minimal python ``-c`` body instead of
 # spawning a process, so command dispatch can be observed via captured stdout.
 def _fake_process(*args: object, **kwargs: object) -> object:
-    argv = args[0]
-    assert isinstance(argv, list)
-    if argv[:2] != [sys.executable, "-c"]:
-        raise ValueError("only minipython", argv)
-    print(str(argv[2]).removeprefix("python(").removesuffix(")"))
+    invocation = args[0]
+    assert isinstance(invocation, list)
+    if invocation[:2] != [sys.executable, "-c"]:
+        raise ValueError("only minipython", invocation)
+    print(str(invocation[2]).removeprefix("python(").removesuffix(")"))
     return None
 
 
