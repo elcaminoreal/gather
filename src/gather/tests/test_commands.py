@@ -21,12 +21,11 @@ import gather
 from gather import commands
 from gather.commands import ProcessRunner, add_argument
 
-from ._assertions import assert_stdout_contains
-
-
-# Conforming ProcessRunner wrapper around subprocess.run.
-def _run(*args: object, **kwargs: object) -> object:  # noqa: SLD801
-    return subprocess.run(*args, **kwargs)  # type: ignore[call-overload]
+from ._assertions import (
+    assert_file_absent,
+    assert_file_contents,
+    assert_stdout_contains,
+)
 
 
 # Run a one-line python snippet through a registered command's injected runner.
@@ -36,12 +35,17 @@ def _run_python(run: ProcessRunner, body: str) -> None:
 
 # Conforming ProcessRunner that echoes a minimal python ``-c`` body instead of
 # spawning a process, so command dispatch can be observed via captured stdout.
-def _fake_process(*args: object, **kwargs: object) -> object:
-    invocation = args[0]
-    assert isinstance(invocation, list)
-    if invocation[:2] != [sys.executable, "-c"]:
-        raise ValueError("only minipython", invocation)
-    print(str(invocation[2]).removeprefix("python(").removesuffix(")"))
+def _fake_process(
+    args: Sequence[str],
+    /,
+    *,
+    check: bool = False,
+    capture_output: bool = False,
+    text: bool = False,
+) -> object:
+    if list(args[:2]) != [sys.executable, "-c"]:
+        raise ValueError("only minipython", args)
+    print(str(args[2]).removeprefix("python(").removesuffix(")"))
     return None
 
 
@@ -103,10 +107,7 @@ def _read_dir(directory: pathlib.Path) -> Mapping[str, str]:
     return {child.name: child.read_text() for child in directory.iterdir()}
 
 
-# Assert both the safe and unsafe files were written with "2".
-def _assert_both_written(case: unittest.TestCase, contents: Mapping[str, str]) -> None:
-    case.assertEqual(contents["unsafe.txt"], "2")  # noqa: SLD801
-    case.assertEqual(contents["safe.txt"], "2")  # noqa: SLD801
+_BOTH_WRITTEN = {"unsafe.txt": "2", "safe.txt": "2"}
 
 
 # Run the ``write-safely`` command against a fresh temp directory and return its
@@ -130,7 +131,7 @@ def _dispatch_write_safely(  # noqa: SLD601,SLD602
             parser=parser,
             argv=argv,
             env={},
-            sp_run=_run,
+            sp_run=subprocess.run,
             is_subcommand=is_subcommand,
             prefix=prefix,
         )
@@ -190,7 +191,7 @@ class CommandMaybeDryTest(unittest.TestCase):
                 parser=parser,
                 argv=["command"],
                 env={},
-                sp_run=_run,
+                sp_run=subprocess.run,
             )
         assert_stdout_contains(stream, "usage")
 
@@ -199,15 +200,15 @@ class CommandMaybeDryTest(unittest.TestCase):
         contents = _dispatch_write_safely(
             leading=["command", "write-safely"], no_dry_run=False
         )
-        self.assertNotIn("unsafe.txt", contents)
-        self.assertEqual(contents["safe.txt"], "2")  # noqa: SLD801
+        assert_file_absent(contents, "unsafe.txt")
+        assert_file_contents(contents, {"safe.txt": "2"})
 
     def test_with_no_dry(self) -> None:
         """A no-dry run writes both files."""
         contents = _dispatch_write_safely(
             leading=["command", "write-safely"], no_dry_run=True
         )
-        _assert_both_written(self, contents)
+        assert_file_contents(contents, _BOTH_WRITTEN)
 
     def test_with_dry_fail(self) -> None:
         """A command targeting a missing directory raises."""
@@ -223,7 +224,7 @@ class CommandMaybeDryTest(unittest.TestCase):
         contents = _dispatch_write_safely(
             leading=["write-safely"], no_dry_run=True, is_subcommand=True
         )
-        _assert_both_written(self, contents)
+        assert_file_contents(contents, _BOTH_WRITTEN)
 
     def test_with_prefixed_subcommand(self) -> None:
         """Dispatch works for a prefixed subcommand."""
@@ -233,4 +234,4 @@ class CommandMaybeDryTest(unittest.TestCase):
             is_subcommand=True,
             prefix="command",
         )
-        _assert_both_written(self, contents)
+        assert_file_contents(contents, _BOTH_WRITTEN)

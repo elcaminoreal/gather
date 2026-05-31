@@ -16,24 +16,33 @@ _Element = TypeVar("_Element")
 
 
 class ProcessRunner(Protocol):
-    """Something that runs a subprocess, like ``subprocess.run``."""
+    """Something that runs a subprocess, like ``subprocess.run``.
 
-    def __call__(self, *args: object, **kwargs: object) -> object:
+    The signature is the subset of ``subprocess.run`` that gather and
+    ``commander_data`` actually use, so ``subprocess.run`` itself -- and any
+    test double with the same shape -- satisfies the protocol directly.
+    """
+
+    def __call__(  # noqa: SLD602
+        self,
+        args: Sequence[str],
+        /,
+        *,
+        check: bool = ...,
+        capture_output: bool = ...,
+        text: bool = ...,
+    ) -> object:
         """Run a subprocess.
 
         Args:
-            *args: positional arguments for the runner.
-            **kwargs: keyword arguments for the runner.
+            args: the command and its arguments.
+            check: raise if the process exits non-zero.
+            capture_output: capture stdout and stderr.
+            text: decode captured output as text.
 
         Returns:
             Whatever the underlying runner returns.
         """
-
-
-def _default_run(  # noqa: SLD801 # pragma: no cover
-    *args: object, **kwargs: object
-) -> object:
-    return subprocess.run(*args, **kwargs)  # type: ignore[call-overload]
 
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
@@ -164,7 +173,7 @@ def run_maybe_dry(  # noqa: SLD601,SLD602,SLD609
     parser: argparse.ArgumentParser,
     argv: Sequence[str] = sys.argv,
     env: Mapping[str, str] = os.environ,
-    sp_run: ProcessRunner = _default_run,
+    sp_run: ProcessRunner = subprocess.run,
     is_subcommand: bool = False,
     prefix: str | None = None,
 ) -> object:
@@ -215,7 +224,7 @@ def run(
     parser: argparse.ArgumentParser,
     argv: Sequence[str] = sys.argv,
     env: Mapping[str, str] = os.environ,
-    sp_run: ProcessRunner = _default_run,
+    sp_run: ProcessRunner = subprocess.run,
 ) -> object:
     """Parse arguments and run the command.
 

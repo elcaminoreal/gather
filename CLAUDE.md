@@ -1,5 +1,57 @@
 # gather Development Guidelines
 
+## Verifying Your Work
+
+`nox` is the single source of truth for whether a change is correct. A
+change is "done" only when the full `nox` run reports every session
+successful and exits `0`. Treat that exit code as the definition of done.
+
+Follow this process for every change:
+
+1. **Provide the interpreters nox asks for.** The sessions pin specific
+   Python versions (see `VERSIONS` in `noxfile.py`, currently 3.12, 3.13,
+   3.14, plus the `dry_release` interpreter). Install each one so nox runs
+   the session instead of skipping it. With [`uv`](https://docs.astral.sh/uv/):
+
+   ```bash
+   uv python install 3.12 3.13 3.14
+   ```
+
+   Put each interpreter on `PATH` (e.g. symlink `uv python find 3.14` to
+   `python3.14`) so nox's discovery finds it. A *skipped* session is an
+   unverified session; arrange for every session to actually execute.
+
+2. **Run the whole suite and read the summary.**
+
+   ```bash
+   nox
+   ```
+
+   Confirm the trailing summary shows `success` for every session —
+   `lint`, `tests-3.12`, `tests-3.13`, `tests-3.14`, `mypy`, `docs`, and
+   `dry_release` — and that the process exit code is `0`.
+
+3. **Iterate against nox itself.** When fixing one session, re-run that
+   session (`nox -s lint`, `nox -s mypy`, `nox -s tests-3.14`) and read its
+   real output to choose the next edit. Let the tool's report drive each
+   change. For fast inner loops you may run a tool from the session's
+   prepared virtualenv under `build/nox/<session>/bin/`, but always
+   re-confirm with `nox` before considering the work complete.
+
+4. **Confirm the full suite is green on a clean tree before committing,
+   and again before pushing.** Make the commit/push reflect a state you
+   have just observed nox accept end-to-end. Have the verified `nox`
+   summary in hand when you state that the work passes.
+
+### Suppressing a specific finding
+
+When a `stolid` finding is genuinely the intended design (e.g. venusian
+requires separate top-level decorated definitions, or a Protocol
+deliberately mirrors a wide stdlib signature), suppress that one code with
+a `# noqa: CODE` comment placed **on the exact line stolid reports** (run
+the session to see the reported line and column). Keep the waiver narrow —
+name the single code — and leave the rest of the rules in force.
+
 ## Running Tests and Linting
 
 Use `nox` to run all checks. If nox is not installed:
